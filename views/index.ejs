@@ -1,0 +1,85 @@
+<%- include('partials/head', { title }) %>
+
+<%
+  var daftarKategori = [];
+  produk.forEach(function (p) {
+    if (daftarKategori.indexOf(p.kategori) === -1) daftarKategori.push(p.kategori);
+  });
+  var jumlahTersedia = produk.filter(function (p) { return p.tersedia; }).length;
+%>
+
+  <main class="flex-1 w-full">
+    <!-- Hero -->
+    <section class="relative overflow-hidden">
+      <div class="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-72 w-[40rem] rounded-full bg-amber-500/20 blur-3xl"></div>
+      <div class="relative max-w-5xl mx-auto px-4 pt-16 pb-12 text-center">
+        <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-400">
+          <span id="status-dot" class="h-2 w-2 rounded-full bg-neutral-500"></span>
+          <span id="status-text">Memeriksa server...</span>
+        </div>
+        <h1 class="mt-6 text-4xl md:text-6xl font-extrabold tracking-tight text-white">
+          Roti Bakar
+          <span class="bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">Bara</span>
+        </h1>
+        <p class="mt-4 max-w-xl mx-auto text-neutral-400">
+          Lihat menu dan harga kami. Segera hadir: pesan langsung lewat chatbot, tanpa menunggu balasan admin.
+        </p>
+        <div class="mt-8 flex justify-center gap-4 text-sm">
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-6 py-3">
+            <div class="text-2xl font-bold text-white"><%= produk.length %></div>
+            <div class="text-neutral-500">Total menu</div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-6 py-3">
+            <div class="text-2xl font-bold text-emerald-400"><%= jumlahTersedia %></div>
+            <div class="text-neutral-500">Tersedia</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Daftar menu -->
+    <section class="max-w-5xl mx-auto px-4 pb-16">
+      <% if (produk.length === 0) { %>
+        <p class="text-neutral-500 text-center">Menu belum tersedia.</p>
+      <% } else { %>
+        <% daftarKategori.forEach(function (kategori) { %>
+          <h2 class="mt-10 mb-4 text-lg font-semibold text-white flex items-center gap-3">
+            <%= kategori %>
+            <span class="h-px flex-1 bg-white/10"></span>
+          </h2>
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <% produk.filter(function (p) { return p.kategori === kategori; }).forEach(function (p) { %>
+              <article class="group rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:-translate-y-1 hover:border-amber-400/40 <%= p.tersedia ? '' : 'opacity-60' %>">
+                <h3 class="text-base font-semibold text-white"><%= p.nama %></h3>
+                <p class="mt-3 text-2xl font-bold text-amber-400"><%= formatRupiah(p.harga) %></p>
+                <% if (p.tersedia) { %>
+                  <span class="mt-4 inline-block rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs text-emerald-400">Tersedia</span>
+                <% } else { %>
+                  <span class="mt-4 inline-block rounded-full bg-red-500/15 px-2.5 py-1 text-xs text-red-400">Habis</span>
+                <% } %>
+              </article>
+            <% }); %>
+          </div>
+        <% }); %>
+      <% } %>
+    </section>
+  </main>
+
+  <script>
+    // Menampilkan status server dari endpoint /api/status
+    (async function () {
+      var dot = document.getElementById('status-dot');
+      var text = document.getElementById('status-text');
+      try {
+        var res = await fetch('/api/status');
+        var data = await res.json();
+        dot.className = 'h-2 w-2 rounded-full bg-emerald-400';
+        text.textContent = 'Server online \u00b7 uptime ' + data.uptime_detik + ' detik';
+      } catch (e) {
+        dot.className = 'h-2 w-2 rounded-full bg-red-500';
+        text.textContent = 'Server tidak terjangkau';
+      }
+    })();
+  </script>
+
+<%- include('partials/footer') %>
