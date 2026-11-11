@@ -5,6 +5,8 @@ const config = require('./config');
 const logger = require('./middlewares/logger');
 const routes = require('./routes');
 const { notFound, serverError } = require('./controllers/errorController');
+const { initDatabase } = require('./models');
+const { describeDbError } = require('./utils/dbError');
 const { formatRupiah } = require('./utils/format');
 
 const app = express();
@@ -29,9 +31,18 @@ app.use(notFound);
 app.use(serverError);
 
 if (require.main === module) {
-  app.listen(config.port, () => {
-    console.log(`${config.appName} berjalan di http://localhost:${config.port}`);
-  });
+  // Server baru dinyalakan setelah koneksi database dan tabel siap
+  initDatabase()
+    .then(() => {
+      console.log(`Database PostgreSQL terhubung: ${config.db.name} (${config.db.host}:${config.db.port})`);
+      app.listen(config.port, () => {
+        console.log(`${config.appName} berjalan di http://localhost:${config.port}`);
+      });
+    })
+    .catch((err) => {
+      console.error(`\n[GAGAL] ${describeDbError(err)}\n`);
+      process.exit(1);
+    });
 }
 
 module.exports = app;

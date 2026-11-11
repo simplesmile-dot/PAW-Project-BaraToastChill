@@ -22,7 +22,7 @@
           <span class="bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">Bara</span>
         </h1>
         <p class="mt-4 max-w-xl mx-auto text-neutral-400">
-          Lihat menu dan harga kami. Segera hadir: pesan langsung lewat chatbot, tanpa menunggu balasan admin.
+          Kelola menu dan harga Roti Bakar Bara. Segera hadir: pesan langsung lewat chatbot, tanpa menunggu balasan admin.
         </p>
         <div class="mt-8 flex justify-center gap-4 text-sm">
           <div class="rounded-2xl border border-white/10 bg-white/5 px-6 py-3">
@@ -39,24 +39,48 @@
 
     <!-- Daftar menu -->
     <section class="max-w-5xl mx-auto px-4 pb-16">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-white">Daftar Menu</h2>
+        <button id="btn-tambah" type="button"
+          class="rounded-full bg-amber-500 px-5 py-2 text-sm font-semibold text-neutral-950 transition hover:bg-amber-400">
+          + Tambah Menu
+        </button>
+      </div>
+
       <% if (produk.length === 0) { %>
-        <p class="text-neutral-500 text-center">Menu belum tersedia.</p>
+        <p class="mt-10 rounded-2xl border border-dashed border-white/10 p-10 text-center text-neutral-500">
+          Belum ada menu. Klik &quot;Tambah Menu&quot; untuk membuat menu pertama.
+        </p>
       <% } else { %>
         <% daftarKategori.forEach(function (kategori) { %>
-          <h2 class="mt-10 mb-4 text-lg font-semibold text-white flex items-center gap-3">
+          <h3 class="mt-10 mb-4 text-sm font-semibold uppercase tracking-wide text-neutral-400 flex items-center gap-3">
             <%= kategori %>
             <span class="h-px flex-1 bg-white/10"></span>
-          </h2>
+          </h3>
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <% produk.filter(function (p) { return p.kategori === kategori; }).forEach(function (p) { %>
-              <article class="group rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:-translate-y-1 hover:border-amber-400/40 <%= p.tersedia ? '' : 'opacity-60' %>">
-                <h3 class="text-base font-semibold text-white"><%= p.nama %></h3>
-                <p class="mt-3 text-2xl font-bold text-amber-400"><%= formatRupiah(p.harga) %></p>
-                <% if (p.tersedia) { %>
-                  <span class="mt-4 inline-block rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs text-emerald-400">Tersedia</span>
-                <% } else { %>
-                  <span class="mt-4 inline-block rounded-full bg-red-500/15 px-2.5 py-1 text-xs text-red-400">Habis</span>
-                <% } %>
+              <article
+                data-id="<%= p.id %>"
+                data-nama="<%= p.nama %>"
+                data-kategori="<%= p.kategori %>"
+                data-harga="<%= p.harga %>"
+                data-tersedia="<%= p.tersedia %>"
+                class="rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:-translate-y-1 hover:border-amber-400/40">
+                <div class="<%= p.tersedia ? '' : 'opacity-60' %>">
+                  <h4 class="text-base font-semibold text-white"><%= p.nama %></h4>
+                  <p class="mt-3 text-2xl font-bold text-amber-400"><%= formatRupiah(p.harga) %></p>
+                  <% if (p.tersedia) { %>
+                    <span class="mt-4 inline-block rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs text-emerald-400">Tersedia</span>
+                  <% } else { %>
+                    <span class="mt-4 inline-block rounded-full bg-red-500/15 px-2.5 py-1 text-xs text-red-400">Habis</span>
+                  <% } %>
+                </div>
+                <div class="mt-4 flex gap-2 border-t border-white/10 pt-4 text-sm">
+                  <button type="button" data-aksi="edit"
+                    class="flex-1 rounded-lg border border-white/10 py-1.5 text-neutral-300 transition hover:border-amber-400/50 hover:text-amber-300">Ubah</button>
+                  <button type="button" data-aksi="hapus"
+                    class="flex-1 rounded-lg border border-white/10 py-1.5 text-neutral-300 transition hover:border-red-400/50 hover:text-red-400">Hapus</button>
+                </div>
               </article>
             <% }); %>
           </div>
@@ -65,20 +89,169 @@
     </section>
   </main>
 
+  <!-- Form tambah / ubah menu -->
+  <dialog id="form-dialog"
+    class="w-full max-w-md rounded-2xl border border-white/10 bg-neutral-900 p-0 text-neutral-200 backdrop:bg-black/70">
+    <form id="form-produk" class="p-6">
+      <h2 id="form-judul" class="text-lg font-semibold text-white">Tambah Menu</h2>
+
+      <div id="form-error" class="mt-4 hidden rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300"></div>
+
+      <label class="mt-4 block text-sm text-neutral-400">Nama menu
+        <input name="nama" type="text" required maxlength="100"
+          class="mt-1 w-full rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-white outline-none focus:border-amber-400">
+      </label>
+
+      <label class="mt-4 block text-sm text-neutral-400">Kategori
+        <input name="kategori" type="text" required maxlength="50" list="daftar-kategori"
+          class="mt-1 w-full rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-white outline-none focus:border-amber-400">
+        <datalist id="daftar-kategori">
+          <option value="Roti Bakar"></option>
+          <option value="Minuman"></option>
+        </datalist>
+      </label>
+
+      <label class="mt-4 block text-sm text-neutral-400">Harga (Rp)
+        <input name="harga" type="number" required min="0" max="1000000" step="1"
+          class="mt-1 w-full rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-white outline-none focus:border-amber-400">
+      </label>
+
+      <label class="mt-4 flex items-center gap-2 text-sm text-neutral-300">
+        <input name="tersedia" type="checkbox" checked class="h-4 w-4 accent-amber-500">
+        Menu tersedia
+      </label>
+
+      <div class="mt-6 flex justify-end gap-2 text-sm">
+        <button id="btn-batal" type="button"
+          class="rounded-full border border-white/10 px-4 py-2 text-neutral-300 transition hover:border-white/30">Batal</button>
+        <button type="submit"
+          class="rounded-full bg-amber-500 px-5 py-2 font-semibold text-neutral-950 transition hover:bg-amber-400">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Notifikasi singkat -->
+  <div id="toast" class="fixed bottom-6 right-6 z-30 hidden rounded-xl border border-white/10 bg-neutral-900 px-4 py-3 text-sm text-white shadow-lg"></div>
+
   <script>
-    // Menampilkan status server dari endpoint /api/status
-    (async function () {
-      var dot = document.getElementById('status-dot');
-      var text = document.getElementById('status-text');
-      try {
-        var res = await fetch('/api/status');
-        var data = await res.json();
-        dot.className = 'h-2 w-2 rounded-full bg-emerald-400';
-        text.textContent = 'Server online \u00b7 uptime ' + data.uptime_detik + ' detik';
-      } catch (e) {
-        dot.className = 'h-2 w-2 rounded-full bg-red-500';
-        text.textContent = 'Server tidak terjangkau';
+    (function () {
+      var dialog = document.getElementById('form-dialog');
+      var form = document.getElementById('form-produk');
+      var judul = document.getElementById('form-judul');
+      var errorBox = document.getElementById('form-error');
+      var toast = document.getElementById('toast');
+      var editId = null; // null = mode tambah, angka = mode ubah
+
+      function tampilToast(pesan, galat) {
+        toast.textContent = pesan;
+        toast.className = 'fixed bottom-6 right-6 z-30 rounded-xl border px-4 py-3 text-sm shadow-lg ' +
+          (galat ? 'border-red-500/40 bg-red-950 text-red-200' : 'border-emerald-500/40 bg-emerald-950 text-emerald-200');
       }
+
+      // Data selalu dimuat ulang dari backend (database) setelah operasi berhasil
+      function muatUlang() {
+        setTimeout(function () { window.location.reload(); }, 700);
+      }
+
+      function bukaForm(data) {
+        form.reset();
+        errorBox.classList.add('hidden');
+        errorBox.textContent = '';
+        if (data) {
+          editId = data.id;
+          judul.textContent = 'Ubah Menu';
+          form.elements.nama.value = data.nama;
+          form.elements.kategori.value = data.kategori;
+          form.elements.harga.value = data.harga;
+          form.elements.tersedia.checked = data.tersedia === 'true';
+        } else {
+          editId = null;
+          judul.textContent = 'Tambah Menu';
+          form.elements.tersedia.checked = true;
+        }
+        dialog.showModal();
+      }
+
+      document.getElementById('btn-tambah').addEventListener('click', function () { bukaForm(null); });
+      document.getElementById('btn-batal').addEventListener('click', function () { dialog.close(); });
+
+      // Tombol Ubah
+      document.querySelectorAll('[data-aksi="edit"]').forEach(function (tombol) {
+        tombol.addEventListener('click', function () {
+          var kartu = tombol.closest('[data-id]');
+          bukaForm({
+            id: kartu.dataset.id,
+            nama: kartu.dataset.nama,
+            kategori: kartu.dataset.kategori,
+            harga: kartu.dataset.harga,
+            tersedia: kartu.dataset.tersedia
+          });
+        });
+      });
+
+      // Tombol Hapus
+      document.querySelectorAll('[data-aksi="hapus"]').forEach(function (tombol) {
+        tombol.addEventListener('click', async function () {
+          var kartu = tombol.closest('[data-id]');
+          if (!confirm('Hapus menu "' + kartu.dataset.nama + '"?')) return;
+          try {
+            var res = await fetch('/api/produk/' + kartu.dataset.id, { method: 'DELETE' });
+            var data = await res.json();
+            if (!res.ok) { tampilToast(data.pesan || 'Gagal menghapus menu', true); return; }
+            tampilToast(data.pesan);
+            muatUlang();
+          } catch (err) {
+            tampilToast('Tidak dapat terhubung ke server', true);
+          }
+        });
+      });
+
+      // Simpan (tambah atau ubah)
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var payload = {
+          nama: form.elements.nama.value.trim(),
+          kategori: form.elements.kategori.value.trim(),
+          harga: Number(form.elements.harga.value),
+          tersedia: form.elements.tersedia.checked
+        };
+        var url = editId ? '/api/produk/' + editId : '/api/produk';
+        var method = editId ? 'PUT' : 'POST';
+        try {
+          var res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          var data = await res.json();
+          if (!res.ok) {
+            errorBox.textContent = (data.errors || [data.pesan]).join(', ');
+            errorBox.classList.remove('hidden');
+            return;
+          }
+          dialog.close();
+          tampilToast(editId ? 'Menu berhasil diperbarui' : 'Menu berhasil ditambahkan');
+          muatUlang();
+        } catch (err) {
+          errorBox.textContent = 'Tidak dapat terhubung ke server';
+          errorBox.classList.remove('hidden');
+        }
+      });
+
+      // Indikator status server dari /api/status
+      (async function () {
+        var dot = document.getElementById('status-dot');
+        var text = document.getElementById('status-text');
+        try {
+          var res = await fetch('/api/status');
+          var data = await res.json();
+          dot.className = 'h-2 w-2 rounded-full bg-emerald-400';
+          text.textContent = 'Server online \u00b7 PostgreSQL ' + data.database;
+        } catch (err) {
+          dot.className = 'h-2 w-2 rounded-full bg-red-500';
+          text.textContent = 'Server tidak terjangkau';
+        }
+      })();
     })();
   </script>
 

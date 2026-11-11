@@ -1,21 +1,44 @@
-// Model produk: data contoh (array statis), belum memakai database.
-// Field "tersedia" disiapkan untuk fitur F-08 (menu bisa dinonaktifkan).
-const produk = [
-  { id: 1, nama: 'Roti Bakar Coklat',      kategori: 'Roti Bakar', harga: 15000, tersedia: true },
-  { id: 2, nama: 'Roti Bakar Coklat Keju', kategori: 'Roti Bakar', harga: 18000, tersedia: true },
-  { id: 3, nama: 'Roti Bakar Strawberry',  kategori: 'Roti Bakar', harga: 15000, tersedia: true },
-  { id: 4, nama: 'Roti Bakar Kacang Susu', kategori: 'Roti Bakar', harga: 17000, tersedia: true },
-  { id: 5, nama: 'Roti Bakar Tiramisu',    kategori: 'Roti Bakar', harga: 20000, tersedia: false },
-  { id: 6, nama: 'Es Teh Manis',           kategori: 'Minuman',    harga: 5000,  tersedia: true },
-  { id: 7, nama: 'Kopi Susu Chill',        kategori: 'Minuman',    harga: 12000, tersedia: true },
-];
+// Operasi data produk (CRUD) memakai Sequelize.
+// Seluruh akses database ada di sini; controller cukup memanggil fungsi-fungsi ini.
+const Produk = require('./Produk');
 
-// Mengembalikan salinan data agar array asli tidak berubah dari luar.
-const getAll = () => produk.map((p) => ({ ...p }));
+// Ambil hanya field yang dibutuhkan API (tanpa kolom timestamp)
+const serialize = (row) =>
+  row
+    ? {
+        id: row.id,
+        nama: row.nama,
+        kategori: row.kategori,
+        harga: row.harga,
+        tersedia: row.tersedia,
+      }
+    : null;
 
-const getById = (id) => {
-  const hasil = produk.find((p) => p.id === Number(id));
-  return hasil ? { ...hasil } : null;
+// READ: semua produk
+const getAll = async () => {
+  const rows = await Produk.findAll({ order: [['id', 'ASC']] });
+  return rows.map(serialize);
 };
 
-module.exports = { getAll, getById };
+// READ: satu produk berdasarkan ID (null jika tidak ada)
+const getById = async (id) => serialize(await Produk.findByPk(id));
+
+// CREATE: tambah produk baru, mengembalikan produk yang tersimpan
+const create = async ({ nama, kategori, harga, tersedia }) =>
+  serialize(await Produk.create({ nama, kategori, harga, tersedia }));
+
+// UPDATE: perbarui produk, mengembalikan data terbaru (null jika ID tidak ada)
+const update = async (id, { nama, kategori, harga, tersedia }) => {
+  const row = await Produk.findByPk(id);
+  if (!row) return null;
+  await row.update({ nama, kategori, harga, tersedia });
+  return serialize(row);
+};
+
+// DELETE: hapus produk, true jika ada baris yang terhapus
+const remove = async (id) => (await Produk.destroy({ where: { id } })) > 0;
+
+// Jumlah produk (dipakai oleh /api/status)
+const count = async () => Produk.count();
+
+module.exports = { getAll, getById, create, update, remove, count };

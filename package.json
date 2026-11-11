@@ -1,17 +1,21 @@
 {
   "name": "paw-project-baratoastchill",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "ChatBot Bara Toast & Chill - layanan pemesanan Roti Bakar Bara (Project PAW)",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js"
   },
-  "keywords": ["express", "ejs", "mvc", "paw"],
+  "keywords": ["express", "ejs", "mvc", "postgresql", "sequelize", "crud", "paw"],
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "pg": "^8.13.1",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
