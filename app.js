@@ -8,6 +8,7 @@ const { notFound, serverError } = require('./controllers/errorController');
 const { initDatabase } = require('./models');
 const { describeDbError } = require('./utils/dbError');
 const { formatRupiah } = require('./utils/format');
+const chatRoutes = require('./routes/chat.routes');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use(express.json());
 
 // Routes
 app.use(routes);
+app.use('/api', chatRoutes);
 
 // 404 dan error handler (harus paling akhir)
 app.use(notFound);

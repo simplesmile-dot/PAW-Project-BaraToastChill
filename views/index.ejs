@@ -22,7 +22,7 @@
           <span class="bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">Bara</span>
         </h1>
         <p class="mt-4 max-w-xl mx-auto text-neutral-400">
-          Kelola menu dan harga Roti Bakar Bara. Segera hadir: pesan langsung lewat chatbot, tanpa menunggu balasan admin.
+          Kelola menu dan harga Roti Bakar Bara. Gunakan AI Assistant di bawah untuk bertanya langsung seputar menu tanpa menunggu balasan admin.
         </p>
         <div class="mt-8 flex justify-center gap-4 text-sm">
           <div class="rounded-2xl border border-white/10 bg-white/5 px-6 py-3">
@@ -87,6 +87,47 @@
         <% }); %>
       <% } %>
     </section>
+
+    <!-- Integrasi AI Assistant / Chatbot -->
+    <section class="max-w-5xl mx-auto px-4 pb-16">
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="h-3 w-3 rounded-full bg-amber-400 animate-pulse"></div>
+            <h2 class="text-xl font-semibold text-white">Bara AI Assistant</h2>
+          </div>
+          <span class="text-xs text-neutral-400 bg-white/5 border border-white/10 px-3 py-1 rounded-full">Didukung oleh Google Gemini</span>
+        </div>
+        <p class="text-sm text-neutral-400 mb-6">
+          Tanyakan rekomendasi menu, harga, atau ketersediaan produk Roti Bakar Bara secara langsung pada asisten virtual kami.
+        </p>
+
+        <!-- Kotak Percakapan Chat -->
+        <div id="chat-box" class="h-80 overflow-y-auto rounded-xl border border-white/10 bg-neutral-950 p-4 mb-4 text-sm space-y-3">
+          <div class="flex justify-start">
+            <div class="max-w-[80%] rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-neutral-300 text-sm">
+              Halo! Saya AI Assistant BaraToastChill. Ada yang bisa saya bantu terkait menu atau harga roti bakar kami hari ini?
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Input Chat -->
+        <form id="chat-form" class="flex gap-2">
+          <input id="chat-input" type="text" placeholder="Contoh: Apa saja menu roti bakar yang tersedia?" maxlength="500" required
+            class="flex-1 rounded-xl border border-white/10 bg-neutral-950 px-4 py-2.5 text-sm text-white outline-none focus:border-amber-400 transition" />
+          <button type="submit"
+            class="rounded-xl bg-amber-500 px-6 py-2.5 text-sm font-semibold text-neutral-950 transition hover:bg-amber-400 flex items-center justify-center">
+            Kirim
+          </button>
+        </form>
+
+        <!-- Indikator Loading AI -->
+        <div id="chat-loading" class="hidden mt-3 text-xs text-amber-400 flex items-center gap-2">
+          <span class="inline-block h-2 w-2 rounded-full bg-amber-400 animate-ping"></span>
+          AI sedang memproses pertanyaan...
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- Form tambah / ubah menu -->
@@ -140,7 +181,7 @@
       var judul = document.getElementById('form-judul');
       var errorBox = document.getElementById('form-error');
       var toast = document.getElementById('toast');
-      var editId = null; // null = mode tambah, angka = mode ubah
+      var editId = null;
 
       function tampilToast(pesan, galat) {
         toast.textContent = pesan;
@@ -148,7 +189,6 @@
           (galat ? 'border-red-500/40 bg-red-950 text-red-200' : 'border-emerald-500/40 bg-emerald-950 text-emerald-200');
       }
 
-      // Data selalu dimuat ulang dari backend (database) setelah operasi berhasil
       function muatUlang() {
         setTimeout(function () { window.location.reload(); }, 700);
       }
@@ -175,7 +215,6 @@
       document.getElementById('btn-tambah').addEventListener('click', function () { bukaForm(null); });
       document.getElementById('btn-batal').addEventListener('click', function () { dialog.close(); });
 
-      // Tombol Ubah
       document.querySelectorAll('[data-aksi="edit"]').forEach(function (tombol) {
         tombol.addEventListener('click', function () {
           var kartu = tombol.closest('[data-id]');
@@ -189,7 +228,6 @@
         });
       });
 
-      // Tombol Hapus
       document.querySelectorAll('[data-aksi="hapus"]').forEach(function (tombol) {
         tombol.addEventListener('click', async function () {
           var kartu = tombol.closest('[data-id]');
@@ -206,7 +244,6 @@
         });
       });
 
-      // Simpan (tambah atau ubah)
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         var payload = {
@@ -237,6 +274,62 @@
           errorBox.classList.remove('hidden');
         }
       });
+
+      // Logika Frontend Chatbot AI Assistant
+      var chatForm = document.getElementById('chat-form');
+      var chatInput = document.getElementById('chat-input');
+      var chatBox = document.getElementById('chat-box');
+      var chatLoading = document.getElementById('chat-loading');
+
+      function escapeHtml(text) {
+        var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, function (m) { return map[m]; });
+      }
+
+      if (chatForm) {
+        chatForm.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          var message = chatInput.value.trim();
+          if (!message) return;
+
+          // Tambahkan pesan user ke kotak chat
+          var userDiv = document.createElement('div');
+          userDiv.className = 'flex justify-end';
+          userDiv.innerHTML = '<div class="max-w-[80%] rounded-xl bg-amber-500/20 border border-amber-500/30 px-4 py-2 text-white text-sm">' + escapeHtml(message) + '</div>';
+          chatBox.appendChild(userDiv);
+
+          chatInput.value = '';
+          chatBox.scrollTop = chatBox.scrollHeight;
+          chatLoading.classList.remove('hidden');
+
+          try {
+            var res = await fetch('/api/chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: message })
+            });
+            var data = await res.json();
+            chatLoading.classList.add('hidden');
+
+            var aiDiv = document.createElement('div');
+            aiDiv.className = 'flex justify-start';
+
+            if (!res.ok) {
+              aiDiv.innerHTML = '<div class="max-w-[80%] rounded-xl bg-red-500/20 border border-red-500/30 px-4 py-2 text-red-200 text-sm">Error: ' + escapeHtml(data.error || 'Gagal memproses permintaan.') + '</div>';
+            } else {
+              aiDiv.innerHTML = '<div class="max-w-[80%] rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-neutral-200 text-sm whitespace-pre-line">' + escapeHtml(data.data.reply) + '</div>';
+            }
+            chatBox.appendChild(aiDiv);
+          } catch (err) {
+            chatLoading.classList.add('hidden');
+            var errDiv = document.createElement('div');
+            errDiv.className = 'flex justify-start';
+            errDiv.innerHTML = '<div class="max-w-[80%] rounded-xl bg-red-500/20 border border-red-500/30 px-4 py-2 text-red-200 text-sm">Tidak dapat terhubung ke server backend.</div>';
+            chatBox.appendChild(errDiv);
+          }
+          chatBox.scrollTop = chatBox.scrollHeight;
+        });
+      }
 
       // Indikator status server dari /api/status
       (async function () {
