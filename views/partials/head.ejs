@@ -9,15 +9,16 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-neutral-950 text-neutral-200 min-h-screen flex flex-col antialiased">
-  <header class="sticky top-0 z-20 backdrop-blur bg-neutral-950/70 border-b border-white/10">
-    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-3">
+  <header class="sticky top-0 z-20 backdrop-blur bg-neutral-950/80 border-b border-white/10">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <a href="/" class="flex items-center gap-3 shrink-0">
         <span class="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-300 to-orange-600 text-neutral-950 font-extrabold flex items-center justify-center">B</span>
         <span class="font-semibold text-white">Bara <span class="text-amber-400">Toast &amp; Chill</span></span>
       </a>
-      <nav class="flex gap-2 text-xs font-mono">
-        <a href="/api/status" class="px-3 py-1.5 rounded-full border border-white/10 text-neutral-300 hover:border-amber-400/50 hover:text-amber-300 transition">/api/status</a>
-        <a href="/api/produk" class="px-3 py-1.5 rounded-full border border-white/10 text-neutral-300 hover:border-amber-400/50 hover:text-amber-300 transition">/api/produk</a>
+      <nav class="flex items-center gap-2 text-xs">
+        <a href="/" class="px-3 py-1.5 rounded-full border border-white/10 text-neutral-200 hover:border-amber-400/50 hover:text-amber-300 transition">Chatbot &amp; Menu</a>
+        <a href="/admin" class="px-3 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 transition">Admin &amp; Dapur</a>
+        <a href="/api/status" class="hidden sm:inline-block px-3 py-1.5 rounded-full border border-white/10 font-mono text-neutral-400 hover:border-amber-400/50 hover:text-amber-300 transition">/api/status</a>
       </nav>
     </div>
   </header>

@@ -23,6 +23,7 @@ app.locals.formatRupiah = formatRupiah;
 // Middleware (logger dipasang paling awal agar semua request tercatat)
 app.use(logger);
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Routes
 app.use(routes);

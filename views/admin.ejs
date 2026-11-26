@@ -1,0 +1,563 @@
+<%- include('partials/head', { title }) %>
+
+<%
+  var countBaru = pesanan.filter(function (o) { return o.status === 'Baru'; }).length;
+  var countDiproses = pesanan.filter(function (o) { return o.status === 'Diproses'; }).length;
+  var countSiap = pesanan.filter(function (o) { return o.status === 'Siap'; }).length;
+  var countMenuAktif = produk.filter(function (p) { return p.tersedia; }).length;
+%>
+
+  <main class="flex-1 w-full max-w-6xl mx-auto px-4 py-8 space-y-8">
+    <!-- Header Dashboard -->
+    <section class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-6">
+      <div>
+        <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">
+          <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Login sebagai: <strong class="font-semibold"><%= adminUser %></strong>
+        </div>
+        <h1 class="mt-3 text-2xl md:text-3xl font-extrabold text-white">Dashboard Admin &amp; Dapur</h1>
+        <p class="mt-1 text-sm text-neutral-400">
+          Pantau pesanan masuk secara real-time, perbarui status pesanan dapur, dan kelola ketersediaan menu.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btn-refresh-orders" type="button"
+          class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-neutral-200 hover:border-amber-400/50 hover:text-amber-300 transition">
+          Muat Ulang Pesanan
+        </button>
+        <form method="POST" action="/admin/logout">
+          <button type="submit"
+            class="rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-medium text-red-300 hover:bg-red-500/20 transition">
+            Logout
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Ringkasan Statistik -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <div class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
+        <div class="text-xs text-amber-200">Pesanan Baru</div>
+        <div id="stat-baru" class="mt-1 text-2xl font-extrabold text-amber-300"><%= countBaru %></div>
+      </div>
+      <div class="rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4">
+        <div class="text-xs text-sky-200">Diproses</div>
+        <div id="stat-diproses" class="mt-1 text-2xl font-extrabold text-sky-300"><%= countDiproses %></div>
+      </div>
+      <div class="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+        <div class="text-xs text-emerald-200">Siap Diambil</div>
+        <div id="stat-siap" class="mt-1 text-2xl font-extrabold text-emerald-300"><%= countSiap %></div>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div class="text-xs text-neutral-400">Menu Aktif</div>
+        <div class="mt-1 text-2xl font-extrabold text-white"><%= countMenuAktif %> / <%= produk.length %></div>
+      </div>
+    </section>
+
+    <!-- Tab Navigasi: Daftar Pesanan vs Kelola Menu -->
+    <section>
+      <div class="flex items-center gap-2 border-b border-white/10 pb-3">
+        <button type="button" data-tab="orders"
+          class="tab-btn rounded-full bg-amber-500 px-5 py-2 text-xs font-bold text-neutral-950 transition">
+          Daftar Pesanan (<span id="tab-order-count"><%= pesanan.length %></span>)
+        </button>
+        <button type="button" data-tab="menu"
+          class="tab-btn rounded-full border border-white/10 bg-white/5 px-5 py-2 text-xs font-semibold text-neutral-300 hover:border-amber-400/40 transition">
+          Kelola Menu (<%= produk.length %>)
+        </button>
+        <span id="auto-refresh-label" class="ml-auto hidden sm:inline text-[11px] text-neutral-500">
+          Auto-refresh setiap 10 detik
+        </span>
+      </div>
+
+      <!-- Panel 1: Daftar Pesanan Masuk (US-06, US-07) -->
+      <div id="panel-orders" class="mt-6 space-y-5">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs text-neutral-400 mr-1">Filter Status:</span>
+          <button type="button" data-filter-status="Semua"
+            class="filter-btn rounded-full bg-white/15 border border-white/20 px-3.5 py-1 text-xs font-semibold text-white">Semua</button>
+          <button type="button" data-filter-status="Baru"
+            class="filter-btn rounded-full border border-white/10 bg-white/5 px-3.5 py-1 text-xs text-neutral-300 hover:border-amber-400/50">Baru</button>
+          <button type="button" data-filter-status="Diproses"
+            class="filter-btn rounded-full border border-white/10 bg-white/5 px-3.5 py-1 text-xs text-neutral-300 hover:border-sky-400/50">Diproses</button>
+          <button type="button" data-filter-status="Siap"
+            class="filter-btn rounded-full border border-white/10 bg-white/5 px-3.5 py-1 text-xs text-neutral-300 hover:border-emerald-400/50">Siap</button>
+        </div>
+
+        <div id="orders-container" class="space-y-4">
+          <!-- Dirender oleh JS agar selalu sinkron dengan auto-refresh -->
+        </div>
+      </div>
+
+      <!-- Panel 2: Kelola Menu (US-08) -->
+      <div id="panel-menu" class="hidden mt-6 space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-white">Daftar Menu Toko</h2>
+            <p class="text-xs text-neutral-400">Menu yang dinonaktifkan otomatis tidak tampil pada daftar menu chatbot.</p>
+          </div>
+          <button id="btn-tambah" type="button"
+            class="rounded-full bg-amber-500 px-5 py-2 text-xs sm:text-sm font-semibold text-neutral-950 hover:bg-amber-400 transition">
+            + Tambah Menu
+          </button>
+        </div>
+
+        <div id="menu-container">
+          <%
+            var daftarKategori = [];
+            produk.forEach(function (p) {
+              if (daftarKategori.indexOf(p.kategori) === -1) daftarKategori.push(p.kategori);
+            });
+          %>
+          <% if (produk.length === 0) { %>
+            <p class="rounded-2xl border border-dashed border-white/10 p-10 text-center text-neutral-500">
+              Belum ada menu. Klik &quot;+ Tambah Menu&quot; untuk menambahkan menu baru.
+            </p>
+          <% } else { %>
+            <% daftarKategori.forEach(function (kategori) { %>
+              <h3 class="mt-8 mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-400 flex items-center gap-3">
+                <%= kategori %>
+                <span class="h-px flex-1 bg-white/10"></span>
+              </h3>
+              <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <% produk.filter(function (p) { return p.kategori === kategori; }).forEach(function (p) { %>
+                  <article
+                    data-id="<%= p.id %>"
+                    data-nama="<%= p.nama %>"
+                    data-kategori="<%= p.kategori %>"
+                    data-harga="<%= p.harga %>"
+                    data-tersedia="<%= p.tersedia %>"
+                    class="rounded-2xl border <%= p.tersedia ? 'border-white/10 bg-white/5' : 'border-red-500/20 bg-white/[0.02]' %> p-5 transition">
+                    <div class="<%= p.tersedia ? '' : 'opacity-60' %>">
+                      <div class="flex items-start justify-between gap-2">
+                        <h4 class="text-base font-semibold text-white"><%= p.nama %></h4>
+                        <% if (p.tersedia) { %>
+                          <span class="shrink-0 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] text-emerald-400">Tersedia</span>
+                        <% } else { %>
+                          <span class="shrink-0 rounded-full bg-red-500/15 px-2.5 py-0.5 text-[11px] text-red-400">Nonaktif</span>
+                        <% } %>
+                      </div>
+                      <p class="mt-2 text-xl font-bold text-amber-400"><%= formatRupiah(p.harga) %></p>
+                    </div>
+                    <div class="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-3.5 text-xs">
+                      <button type="button" data-aksi="toggle"
+                        class="flex-1 rounded-lg border <%= p.tersedia ? 'border-amber-500/30 text-amber-300 hover:bg-amber-500/15' : 'border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/15' %> py-1.5 font-medium transition">
+                        <%= p.tersedia ? 'Nonaktifkan' : 'Aktifkan' %>
+                      </button>
+                      <button type="button" data-aksi="edit"
+                        class="rounded-lg border border-white/10 px-3 py-1.5 text-neutral-300 hover:border-amber-400/50 hover:text-amber-300 transition">
+                        Ubah
+                      </button>
+                      <button type="button" data-aksi="hapus"
+                        class="rounded-lg border border-white/10 px-3 py-1.5 text-neutral-300 hover:border-red-400/50 hover:text-red-400 transition">
+                        Hapus
+                      </button>
+                    </div>
+                  </article>
+                <% }); %>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Tambah / Ubah Menu -->
+  <dialog id="form-dialog"
+    class="w-full max-w-md rounded-2xl border border-white/10 bg-neutral-900 p-0 text-neutral-200 backdrop:bg-black/70">
+    <form id="form-produk" class="p-6">
+      <h2 id="form-judul" class="text-lg font-semibold text-white">Tambah Menu</h2>
+
+      <div id="form-error" class="mt-4 hidden rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300"></div>
+
+      <label class="mt-4 block text-sm text-neutral-400">Nama menu
+        <input name="nama" type="text" required maxlength="100"
+          class="mt-1 w-full rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-white outline-none focus:border-amber-400">
+      </label>
+
+      <label class="mt-4 block text-sm text-neutral-400">Kategori
+        <input name="kategori" type="text" required maxlength="50" list="daftar-kategori"
+          class="mt-1 w-full rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-white outline-none focus:border-amber-400">
+        <datalist id="daftar-kategori">
+          <option value="Roti Bakar"></option>
+          <option value="Minuman"></option>
+        </datalist>
+      </label>
+
+      <label class="mt-4 block text-sm text-neutral-400">Harga (Rp)
+        <input name="harga" type="number" required min="0" max="1000000" step="1"
+          class="mt-1 w-full rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-white outline-none focus:border-amber-400">
+      </label>
+
+      <label class="mt-4 flex items-center gap-2 text-sm text-neutral-300">
+        <input name="tersedia" type="checkbox" checked class="h-4 w-4 accent-amber-500">
+        Menu tersedia di chatbot
+      </label>
+
+      <div class="mt-6 flex justify-end gap-2 text-sm">
+        <button id="btn-batal" type="button"
+          class="rounded-full border border-white/10 px-4 py-2 text-neutral-300 hover:border-white/30 transition">Batal</button>
+        <button type="submit"
+          class="rounded-full bg-amber-500 px-5 py-2 font-semibold text-neutral-950 hover:bg-amber-400 transition">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="fixed bottom-6 right-6 z-30 hidden rounded-xl border border-white/10 bg-neutral-900 px-4 py-3 text-sm text-white shadow-lg"></div>
+
+  <script>
+    (function () {
+      var initialOrders = <%- JSON.stringify(pesanan) %>;
+      var activeFilter = 'Semua';
+      var ordersData = Array.isArray(initialOrders) ? initialOrders : [];
+
+      var ordersContainer = document.getElementById('orders-container');
+      var statBaruEl = document.getElementById('stat-baru');
+      var statDiprosesEl = document.getElementById('stat-diproses');
+      var statSiapEl = document.getElementById('stat-siap');
+      var tabOrderCountEl = document.getElementById('tab-order-count');
+      var toastEl = document.getElementById('toast');
+      var toastTimer = null;
+
+      function formatRupiah(angka) {
+        return 'Rp' + String(angka || 0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      }
+
+      function escapeHtml(text) {
+        var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return String(text || '').replace(/[&<>"']/g, function (m) { return map[m]; });
+      }
+
+      function formatWaktu(iso) {
+        if (!iso) return '';
+        try {
+          return new Date(iso).toLocaleString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        } catch (e) {
+          return iso;
+        }
+      }
+
+      function tampilToast(pesan, galat) {
+        toastEl.textContent = pesan;
+        toastEl.className = 'fixed bottom-6 right-6 z-30 rounded-xl border px-4 py-3 text-sm shadow-lg ' +
+          (galat ? 'border-red-500/40 bg-red-950 text-red-200' : 'border-emerald-500/40 bg-emerald-950 text-emerald-200');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toastEl.classList.add('hidden');
+        }, 2800);
+      }
+
+      function updateOrderStats() {
+        var baru = 0, diproses = 0, siap = 0;
+        ordersData.forEach(function (o) {
+          if (o.status === 'Baru') baru++;
+          else if (o.status === 'Diproses') diproses++;
+          else if (o.status === 'Siap') siap++;
+        });
+        statBaruEl.textContent = baru;
+        statDiprosesEl.textContent = diproses;
+        statSiapEl.textContent = siap;
+        tabOrderCountEl.textContent = ordersData.length;
+      }
+
+      function renderOrders() {
+        updateOrderStats();
+        var filtered = activeFilter === 'Semua'
+          ? ordersData
+          : ordersData.filter(function (o) { return o.status === activeFilter; });
+
+        if (filtered.length === 0) {
+          ordersContainer.innerHTML =
+            '<div class="rounded-2xl border border-dashed border-white/10 p-10 text-center text-sm text-neutral-500">' +
+            'Tidak ada pesanan dengan status "' + escapeHtml(activeFilter) + '".' +
+            '</div>';
+          return;
+        }
+
+        ordersContainer.innerHTML = filtered.map(function (order) {
+          var isBaru = order.status === 'Baru';
+          var cardClass = isBaru
+            ? 'rounded-2xl border-2 border-amber-400/60 bg-amber-500/[0.06] p-5 shadow-lg shadow-amber-500/5'
+            : 'rounded-2xl border border-white/10 bg-white/[0.03] p-5';
+
+          var badgeClass =
+            order.status === 'Siap'
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+              : order.status === 'Diproses'
+                ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                : 'bg-amber-500/25 text-amber-200 border-amber-400/50';
+
+          var itemsHtml = (order.items || []).map(function (it) {
+            return (
+              '<li class="flex items-center justify-between text-sm py-1 border-b border-white/5 last:border-b-0">' +
+                '<span class="text-neutral-200"><strong class="text-amber-300">' + it.jumlah + 'x</strong> ' + escapeHtml(it.nama_produk) + '</span>' +
+                '<span class="text-neutral-400 text-xs">' + formatRupiah(it.subtotal) + '</span>' +
+              '</li>'
+            );
+          }).join('');
+
+          var statusButtons = ['Baru', 'Diproses', 'Siap'].map(function (st) {
+            var active = order.status === st;
+            var btnStyle = active
+              ? (st === 'Siap'
+                  ? 'bg-emerald-500 text-neutral-950 font-bold border-emerald-400'
+                  : st === 'Diproses'
+                    ? 'bg-sky-500 text-neutral-950 font-bold border-sky-400'
+                    : 'bg-amber-500 text-neutral-950 font-bold border-amber-400')
+              : 'border-white/10 bg-neutral-950 text-neutral-300 hover:border-white/30';
+            return (
+              '<button type="button" data-order-id="' + order.id + '" data-next-status="' + st + '" ' +
+              (active ? 'disabled ' : '') +
+              'class="rounded-lg border px-3 py-1.5 text-xs transition ' + btnStyle + '">' +
+              st +
+              '</button>'
+            );
+          }).join('');
+
+          return (
+            '<article class="' + cardClass + '">' +
+              '<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-white/10">' +
+                '<div class="flex flex-wrap items-center gap-2.5">' +
+                  '<span class="font-mono text-base font-extrabold text-amber-300">' + escapeHtml(order.nomor_pesanan) + '</span>' +
+                  '<span class="rounded-full border px-2.5 py-0.5 text-xs font-semibold ' + badgeClass + '">' +
+                    (isBaru ? 'BARU &bull; Perlu Diproses' : escapeHtml(order.status)) +
+                  '</span>' +
+                  '<span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-neutral-300">' + escapeHtml(order.jenis_pesanan) + '</span>' +
+                '</div>' +
+                '<div class="text-xs text-neutral-400">' + escapeHtml(formatWaktu(order.dibuat_pada)) + '</div>' +
+              '</div>' +
+
+              '<div class="mt-3 grid gap-4 md:grid-cols-12">' +
+                '<div class="md:col-span-7">' +
+                  '<div class="text-xs text-neutral-400">Pelanggan: <strong class="text-sm text-white">' + escapeHtml(order.nama_pelanggan) + '</strong></div>' +
+                  (order.catatan ? '<div class="mt-1 rounded-lg bg-white/5 px-3 py-1.5 text-xs text-amber-200">Catatan: ' + escapeHtml(order.catatan) + '</div>' : '') +
+                  '<ul class="mt-2.5">' + itemsHtml + '</ul>' +
+                '</div>' +
+                '<div class="md:col-span-5 flex flex-col justify-between items-start md:items-end gap-3 border-t md:border-t-0 md:border-l border-white/10 pt-3 md:pt-0 md:pl-4">' +
+                  '<div class="md:text-right">' +
+                    '<div class="text-xs text-neutral-400">Total Pesanan</div>' +
+                    '<div class="text-xl font-extrabold text-amber-400">' + formatRupiah(order.total_harga) + '</div>' +
+                  '</div>' +
+                  '<div class="w-full md:w-auto">' +
+                    '<div class="text-[11px] text-neutral-400 mb-1.5 md:text-right">Ubah Status Dapur:</div>' +
+                    '<div class="flex flex-wrap gap-1.5">' + statusButtons + '</div>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+            '</article>'
+          );
+        }).join('');
+      }
+
+      async function fetchOrders(silent) {
+        try {
+          var res = await fetch('/api/pesanan');
+          if (res.status === 401) {
+            window.location.href = '/admin/login';
+            return;
+          }
+          if (!res.ok) throw new Error('Gagal mengambil daftar pesanan');
+          ordersData = await res.json();
+          renderOrders();
+          if (!silent) tampilToast('Daftar pesanan diperbarui');
+        } catch (err) {
+          if (!silent) tampilToast('Gagal memuat pesanan', true);
+        }
+      }
+
+      ordersContainer.addEventListener('click', async function (e) {
+        var btn = e.target.closest('[data-next-status]');
+        if (!btn) return;
+        var orderId = btn.getAttribute('data-order-id');
+        var nextStatus = btn.getAttribute('data-next-status');
+        btn.disabled = true;
+
+        try {
+          var res = await fetch('/api/pesanan/' + orderId + '/status', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: nextStatus })
+          });
+          if (res.status === 401) {
+            window.location.href = '/admin/login';
+            return;
+          }
+          var json = await res.json();
+          if (!res.ok) {
+            tampilToast(json.pesan || 'Gagal mengubah status', true);
+            btn.disabled = false;
+            return;
+          }
+          ordersData = ordersData.map(function (o) {
+            return String(o.id) === String(orderId) ? json.data : o;
+          });
+          renderOrders();
+          tampilToast(json.pesan);
+        } catch (err) {
+          tampilToast('Tidak dapat terhubung ke server', true);
+          btn.disabled = false;
+        }
+      });
+
+      document.querySelectorAll('.filter-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          activeFilter = btn.getAttribute('data-filter-status');
+          document.querySelectorAll('.filter-btn').forEach(function (b) {
+            b.className = 'filter-btn rounded-full border border-white/10 bg-white/5 px-3.5 py-1 text-xs text-neutral-300 hover:border-amber-400/50';
+          });
+          btn.className = 'filter-btn rounded-full bg-white/15 border border-white/20 px-3.5 py-1 text-xs font-semibold text-white';
+          renderOrders();
+        });
+      });
+
+      document.getElementById('btn-refresh-orders').addEventListener('click', function () {
+        fetchOrders(false);
+      });
+
+      // Tab switching
+      var panelOrders = document.getElementById('panel-orders');
+      var panelMenu = document.getElementById('panel-menu');
+      document.querySelectorAll('.tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var tab = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab-btn').forEach(function (b) {
+            b.className = 'tab-btn rounded-full border border-white/10 bg-white/5 px-5 py-2 text-xs font-semibold text-neutral-300 hover:border-amber-400/40 transition';
+          });
+          btn.className = 'tab-btn rounded-full bg-amber-500 px-5 py-2 text-xs font-bold text-neutral-950 transition';
+          if (tab === 'menu') {
+            panelOrders.classList.add('hidden');
+            panelMenu.classList.remove('hidden');
+          } else {
+            panelMenu.classList.add('hidden');
+            panelOrders.classList.remove('hidden');
+          }
+        });
+      });
+
+      // Kelola Menu (CRUD + Nonaktifkan/Aktifkan - US-08)
+      var dialog = document.getElementById('form-dialog');
+      var form = document.getElementById('form-produk');
+      var judul = document.getElementById('form-judul');
+      var errorBox = document.getElementById('form-error');
+      var editId = null;
+
+      function bukaForm(data) {
+        form.reset();
+        errorBox.classList.add('hidden');
+        errorBox.textContent = '';
+        if (data) {
+          editId = data.id;
+          judul.textContent = 'Ubah Menu';
+          form.elements.nama.value = data.nama;
+          form.elements.kategori.value = data.kategori;
+          form.elements.harga.value = data.harga;
+          form.elements.tersedia.checked = data.tersedia === 'true';
+        } else {
+          editId = null;
+          judul.textContent = 'Tambah Menu';
+          form.elements.tersedia.checked = true;
+        }
+        dialog.showModal();
+      }
+
+      document.getElementById('btn-tambah').addEventListener('click', function () { bukaForm(null); });
+      document.getElementById('btn-batal').addEventListener('click', function () { dialog.close(); });
+
+      document.querySelectorAll('[data-aksi="edit"]').forEach(function (tombol) {
+        tombol.addEventListener('click', function () {
+          var kartu = tombol.closest('[data-id]');
+          bukaForm({
+            id: kartu.dataset.id,
+            nama: kartu.dataset.nama,
+            kategori: kartu.dataset.kategori,
+            harga: kartu.dataset.harga,
+            tersedia: kartu.dataset.tersedia
+          });
+        });
+      });
+
+      document.querySelectorAll('[data-aksi="toggle"]').forEach(function (tombol) {
+        tombol.addEventListener('click', async function () {
+          var kartu = tombol.closest('[data-id]');
+          var tersediaSekarang = kartu.dataset.tersedia === 'true';
+          try {
+            var res = await fetch('/api/produk/' + kartu.dataset.id + '/status', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tersedia: !tersediaSekarang })
+            });
+            if (res.status === 401) { window.location.href = '/admin/login'; return; }
+            var data = await res.json();
+            if (!res.ok) { tampilToast(data.pesan || 'Gagal mengubah status menu', true); return; }
+            tampilToast('Menu "' + data.nama + '" ' + (data.tersedia ? 'diaktifkan' : 'dinonaktifkan'));
+            setTimeout(function () { window.location.reload(); }, 600);
+          } catch (err) {
+            tampilToast('Tidak dapat terhubung ke server', true);
+          }
+        });
+      });
+
+      document.querySelectorAll('[data-aksi="hapus"]').forEach(function (tombol) {
+        tombol.addEventListener('click', async function () {
+          var kartu = tombol.closest('[data-id]');
+          if (!confirm('Hapus menu "' + kartu.dataset.nama + '"?')) return;
+          try {
+            var res = await fetch('/api/produk/' + kartu.dataset.id, { method: 'DELETE' });
+            if (res.status === 401) { window.location.href = '/admin/login'; return; }
+            var data = await res.json();
+            if (!res.ok) { tampilToast(data.pesan || 'Gagal menghapus menu', true); return; }
+            tampilToast(data.pesan);
+            setTimeout(function () { window.location.reload(); }, 600);
+          } catch (err) {
+            tampilToast('Tidak dapat terhubung ke server', true);
+          }
+        });
+      });
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var payload = {
+          nama: form.elements.nama.value.trim(),
+          kategori: form.elements.kategori.value.trim(),
+          harga: Number(form.elements.harga.value),
+          tersedia: form.elements.tersedia.checked
+        };
+        var url = editId ? '/api/produk/' + editId : '/api/produk';
+        var method = editId ? 'PUT' : 'POST';
+        try {
+          var res = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.status === 401) { window.location.href = '/admin/login'; return; }
+          var data = await res.json();
+          if (!res.ok) {
+            errorBox.textContent = (data.errors || [data.pesan]).join(', ');
+            errorBox.classList.remove('hidden');
+            return;
+          }
+          dialog.close();
+          tampilToast(editId ? 'Menu berhasil diperbarui' : 'Menu berhasil ditambahkan');
+          setTimeout(function () { window.location.reload(); }, 600);
+        } catch (err) {
+          errorBox.textContent = 'Tidak dapat terhubung ke server';
+          errorBox.classList.remove('hidden');
+        }
+      });
+
+      // Render awal pesanan + auto-refresh setiap 10 detik
+      renderOrders();
+      setInterval(function () {
+        fetchOrders(true);
+      }, 10000);
+    })();
+  </script>
+
+<%- include('partials/footer') %>

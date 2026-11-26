@@ -1,337 +1,671 @@
 <%- include('partials/head', { title }) %>
 
-<%
-  var daftarKategori = [];
-  produk.forEach(function (p) {
-    if (daftarKategori.indexOf(p.kategori) === -1) daftarKategori.push(p.kategori);
-  });
-  var jumlahTersedia = produk.filter(function (p) { return p.tersedia; }).length;
-%>
-
-  <main class="flex-1 w-full">
-    <!-- Hero -->
-    <section class="relative overflow-hidden">
-      <div class="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-72 w-[40rem] rounded-full bg-amber-500/20 blur-3xl"></div>
-      <div class="relative max-w-5xl mx-auto px-4 pt-16 pb-12 text-center">
-        <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-400">
-          <span id="status-dot" class="h-2 w-2 rounded-full bg-neutral-500"></span>
-          <span id="status-text">Memeriksa server...</span>
-        </div>
-        <h1 class="mt-6 text-4xl md:text-6xl font-extrabold tracking-tight text-white">
-          Roti Bakar
-          <span class="bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">Bara</span>
-        </h1>
-        <p class="mt-4 max-w-xl mx-auto text-neutral-400">
-          Kelola menu dan harga Roti Bakar Bara. Gunakan AI Assistant di bawah untuk bertanya langsung seputar menu tanpa menunggu balasan admin.
-        </p>
-        <div class="mt-8 flex justify-center gap-4 text-sm">
-          <div class="rounded-2xl border border-white/10 bg-white/5 px-6 py-3">
-            <div class="text-2xl font-bold text-white"><%= produk.length %></div>
-            <div class="text-neutral-500">Total menu</div>
+  <main class="flex-1 w-full pb-24 lg:pb-12">
+    <!-- Hero Ringkas -->
+    <section class="relative overflow-hidden border-b border-white/10">
+      <div class="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-72 w-[40rem] rounded-full bg-amber-500/15 blur-3xl"></div>
+      <div class="relative max-w-6xl mx-auto px-4 py-8 md:py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+          <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-400">
+            <span id="status-dot" class="h-2 w-2 rounded-full bg-neutral-500"></span>
+            <span id="status-text">Memeriksa server...</span>
           </div>
-          <div class="rounded-2xl border border-white/10 bg-white/5 px-6 py-3">
-            <div class="text-2xl font-bold text-emerald-400"><%= jumlahTersedia %></div>
-            <div class="text-neutral-500">Tersedia</div>
+          <h1 class="mt-3 text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+            ChatBot <span class="bg-gradient-to-r from-amber-300 to-orange-500 bg-clip-text text-transparent">Bara Toast &amp; Chill</span>
+          </h1>
+          <p class="mt-2 max-w-2xl text-sm text-neutral-400">
+            Pesan roti bakar dan minuman favoritmu langsung lewat chatbot tanpa menunggu balasan admin. Pembayaran dilakukan langsung di kasir toko.
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3 text-xs">
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <div class="text-neutral-400">Jam Buka</div>
+            <div class="mt-0.5 font-semibold text-white"><%= store.hours %></div>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <div class="text-neutral-400">Menu Tersedia</div>
+            <div class="mt-0.5 font-semibold text-emerald-400"><%= produk.length %> varian</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Daftar menu -->
-    <section class="max-w-5xl mx-auto px-4 pb-16">
-      <div class="flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-white">Daftar Menu</h2>
-        <button id="btn-tambah" type="button"
-          class="rounded-full bg-amber-500 px-5 py-2 text-sm font-semibold text-neutral-950 transition hover:bg-amber-400">
-          + Tambah Menu
-        </button>
-      </div>
+    <!-- Workspace Utama: Chatbot + Keranjang Pemesanan -->
+    <section class="max-w-6xl mx-auto px-4 pt-6">
+      <div class="grid gap-6 lg:grid-cols-12 items-start">
 
-      <% if (produk.length === 0) { %>
-        <p class="mt-10 rounded-2xl border border-dashed border-white/10 p-10 text-center text-neutral-500">
-          Belum ada menu. Klik &quot;Tambah Menu&quot; untuk membuat menu pertama.
-        </p>
-      <% } else { %>
-        <% daftarKategori.forEach(function (kategori) { %>
-          <h3 class="mt-10 mb-4 text-sm font-semibold uppercase tracking-wide text-neutral-400 flex items-center gap-3">
-            <%= kategori %>
-            <span class="h-px flex-1 bg-white/10"></span>
-          </h3>
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <% produk.filter(function (p) { return p.kategori === kategori; }).forEach(function (p) { %>
-              <article
-                data-id="<%= p.id %>"
-                data-nama="<%= p.nama %>"
-                data-kategori="<%= p.kategori %>"
-                data-harga="<%= p.harga %>"
-                data-tersedia="<%= p.tersedia %>"
-                class="rounded-2xl border border-white/10 bg-white/5 p-5 transition hover:-translate-y-1 hover:border-amber-400/40">
-                <div class="<%= p.tersedia ? '' : 'opacity-60' %>">
-                  <h4 class="text-base font-semibold text-white"><%= p.nama %></h4>
-                  <p class="mt-3 text-2xl font-bold text-amber-400"><%= formatRupiah(p.harga) %></p>
-                  <% if (p.tersedia) { %>
-                    <span class="mt-4 inline-block rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs text-emerald-400">Tersedia</span>
-                  <% } else { %>
-                    <span class="mt-4 inline-block rounded-full bg-red-500/15 px-2.5 py-1 text-xs text-red-400">Habis</span>
-                  <% } %>
-                </div>
-                <div class="mt-4 flex gap-2 border-t border-white/10 pt-4 text-sm">
-                  <button type="button" data-aksi="edit"
-                    class="flex-1 rounded-lg border border-white/10 py-1.5 text-neutral-300 transition hover:border-amber-400/50 hover:text-amber-300">Ubah</button>
-                  <button type="button" data-aksi="hapus"
-                    class="flex-1 rounded-lg border border-white/10 py-1.5 text-neutral-300 transition hover:border-red-400/50 hover:text-red-400">Hapus</button>
-                </div>
-              </article>
-            <% }); %>
+        <!-- Kolom Chatbot (7 kolom di desktop) -->
+        <div class="lg:col-span-7 rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden flex flex-col">
+          <!-- Header Chat -->
+          <div class="px-4 py-3.5 border-b border-white/10 bg-white/[0.03] flex items-center justify-between gap-2">
+            <div class="flex items-center gap-3">
+              <span class="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <div>
+                <h2 class="text-sm font-semibold text-white">Asisten Pemesanan Bara</h2>
+                <p class="text-[11px] text-neutral-400">Gunakan tombol menu atau ketik kata kunci (menu, jam buka, BTC-0001)</p>
+              </div>
+            </div>
+            <button id="btn-reset-chat" type="button"
+              class="rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-300 hover:border-amber-400/50 hover:text-amber-300 transition">
+              Reset Chat
+            </button>
           </div>
-        <% }); %>
-      <% } %>
-    </section>
 
-    <!-- Integrasi AI Assistant / Chatbot -->
-    <section class="max-w-5xl mx-auto px-4 pb-16">
-      <div class="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-3">
-            <div class="h-3 w-3 rounded-full bg-amber-400 animate-pulse"></div>
-            <h2 class="text-xl font-semibold text-white">Bara AI Assistant</h2>
+          <!-- Area Pesan Chat -->
+          <div id="chat-box" class="h-[460px] md:h-[520px] overflow-y-auto p-4 space-y-4 bg-neutral-950/80 text-sm">
+            <!-- Pesan awal diisi via JS agar seragam dengan Reset Chat -->
           </div>
-          <span class="text-xs text-neutral-400 bg-white/5 border border-white/10 px-3 py-1 rounded-full">Didukung oleh Google Gemini</span>
+
+          <!-- Bar Tombol Cepat & Form Input -->
+          <div class="p-3 md:p-4 border-t border-white/10 bg-white/[0.02] space-y-2.5">
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" data-chat-action="LIHAT_MENU"
+                class="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300 hover:bg-amber-500/20 transition">
+                Lihat Menu
+              </button>
+              <button type="button" data-chat-action="KERANJANG"
+                class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-neutral-200 hover:border-amber-400/40 transition">
+                Keranjang (<span id="quick-cart-count">0</span>)
+              </button>
+              <button type="button" data-chat-action="CEK_STATUS_PROMPT"
+                class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-neutral-200 hover:border-amber-400/40 transition">
+                Cek Status Pesanan
+              </button>
+              <button type="button" data-chat-action="INFO_TOKO"
+                class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-neutral-200 hover:border-amber-400/40 transition">
+                Info Toko
+              </button>
+            </div>
+
+            <form id="chat-form" class="flex gap-2">
+              <input id="chat-input" type="text" maxlength="500" autocomplete="off"
+                placeholder="Ketik pesan, misal: menu, jam buka, atau BTC-0001..."
+                class="flex-1 rounded-xl border border-white/10 bg-neutral-950 px-3.5 py-2.5 text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition" />
+              <button type="submit"
+                class="rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-neutral-950 hover:bg-amber-400 transition shrink-0">
+                Kirim
+              </button>
+            </form>
+          </div>
         </div>
-        <p class="text-sm text-neutral-400 mb-6">
-          Tanyakan rekomendasi menu, harga, atau ketersediaan produk Roti Bakar Bara secara langsung pada asisten virtual kami.
-        </p>
 
-        <!-- Kotak Percakapan Chat -->
-        <div id="chat-box" class="h-80 overflow-y-auto rounded-xl border border-white/10 bg-neutral-950 p-4 mb-4 text-sm space-y-3">
-          <div class="flex justify-start">
-            <div class="max-w-[80%] rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-neutral-300 text-sm">
-              Halo! Saya AI Assistant BaraToastChill. Ada yang bisa saya bantu terkait menu atau harga roti bakar kami hari ini?
+        <!-- Kolom Keranjang & Checkout (5 kolom di desktop) -->
+        <aside id="cart-section" class="lg:col-span-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-5 lg:sticky lg:top-20">
+          <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
+            <div>
+              <h2 class="text-base font-semibold text-white">Keranjang Pesanan</h2>
+              <p class="text-xs text-neutral-400">Item yang dipilih akan tampil di sini</p>
+            </div>
+            <button id="btn-clear-cart" type="button"
+              class="hidden text-xs text-red-400 hover:text-red-300 transition">
+              Kosongkan
+            </button>
+          </div>
+
+          <!-- Daftar Item Keranjang -->
+          <div id="cart-items" class="space-y-3">
+            <div class="rounded-xl border border-dashed border-white/10 p-6 text-center text-xs text-neutral-500">
+              Keranjang masih kosong. Tekan tombol <strong class="text-amber-300">Lihat Menu</strong> di chatbot untuk memilih roti bakar atau minuman.
             </div>
           </div>
-        </div>
 
-        <!-- Form Input Chat -->
-        <form id="chat-form" class="flex gap-2">
-          <input id="chat-input" type="text" placeholder="Contoh: Apa saja menu roti bakar yang tersedia?" maxlength="500" required
-            class="flex-1 rounded-xl border border-white/10 bg-neutral-950 px-4 py-2.5 text-sm text-white outline-none focus:border-amber-400 transition" />
-          <button type="submit"
-            class="rounded-xl bg-amber-500 px-6 py-2.5 text-sm font-semibold text-neutral-950 transition hover:bg-amber-400 flex items-center justify-center">
-            Kirim
-          </button>
-        </form>
+          <!-- Ringkasan Total -->
+          <div id="cart-summary" class="hidden border-t border-white/10 pt-4 space-y-2 text-sm">
+            <div class="flex items-center justify-between text-neutral-400">
+              <span>Total Item</span>
+              <span id="cart-total-qty">0</span>
+            </div>
+            <div class="flex items-center justify-between text-base font-bold text-white">
+              <span>Total Harga</span>
+              <span id="cart-total-price" class="text-amber-400">Rp0</span>
+            </div>
+          </div>
 
-        <!-- Indikator Loading AI -->
-        <div id="chat-loading" class="hidden mt-3 text-xs text-amber-400 flex items-center gap-2">
-          <span class="inline-block h-2 w-2 rounded-full bg-amber-400 animate-ping"></span>
-          AI sedang memproses pertanyaan...
-        </div>
+          <!-- Form Konfirmasi Pesanan (US-03) -->
+          <form id="order-form" novalidate class="space-y-4 border-t border-white/10 pt-4">
+            <div id="order-error" class="hidden rounded-xl border border-red-500/40 bg-red-500/15 px-3.5 py-2.5 text-xs text-red-200"></div>
+
+            <div>
+              <label for="order-nama" class="block text-xs font-medium text-neutral-300 mb-1.5">
+                Nama Pemesan <span class="text-red-400">*</span>
+              </label>
+              <input id="order-nama" name="nama_pelanggan" type="text" maxlength="100"
+                placeholder="Masukkan nama Anda (contoh: Rina)"
+                class="w-full rounded-xl border border-white/10 bg-neutral-950 px-3.5 py-2.5 text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition" />
+            </div>
+
+            <div>
+              <span class="block text-xs font-medium text-neutral-300 mb-1.5">Jenis Pesanan</span>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <label class="cursor-pointer">
+                  <input type="radio" name="jenis_pesanan" value="Makan di tempat" checked class="peer sr-only" />
+                  <span class="block text-center rounded-xl border border-white/10 bg-neutral-950 px-3 py-2.5 text-neutral-300 peer-checked:border-amber-400 peer-checked:bg-amber-500/15 peer-checked:text-amber-300 font-medium transition">
+                    Makan di tempat
+                  </span>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="jenis_pesanan" value="Bawa pulang" class="peer sr-only" />
+                  <span class="block text-center rounded-xl border border-white/10 bg-neutral-950 px-3 py-2.5 text-neutral-300 peer-checked:border-amber-400 peer-checked:bg-amber-500/15 peer-checked:text-amber-300 font-medium transition">
+                    Bawa pulang
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label for="order-catatan" class="block text-xs font-medium text-neutral-300 mb-1.5">
+                Catatan (Opsional)
+              </label>
+              <input id="order-catatan" name="catatan" type="text" maxlength="255"
+                placeholder="Contoh: Keju ekstra, es sedikit"
+                class="w-full rounded-xl border border-white/10 bg-neutral-950 px-3.5 py-2.5 text-sm text-white placeholder-neutral-500 outline-none focus:border-amber-400 transition" />
+            </div>
+
+            <button id="btn-pesan" type="submit"
+              class="w-full rounded-xl bg-amber-500 py-3 text-sm font-bold text-neutral-950 hover:bg-amber-400 transition disabled:opacity-50 disabled:cursor-not-allowed">
+              Pesan Sekarang
+            </button>
+            <p class="text-[11px] text-center text-neutral-500">
+              <%= store.paymentNote %>
+            </p>
+          </form>
+        </aside>
+
       </div>
     </section>
   </main>
 
-  <!-- Form tambah / ubah menu -->
-  <dialog id="form-dialog"
-    class="w-full max-w-md rounded-2xl border border-white/10 bg-neutral-900 p-0 text-neutral-200 backdrop:bg-black/70">
-    <form id="form-produk" class="p-6">
-      <h2 id="form-judul" class="text-lg font-semibold text-white">Tambah Menu</h2>
+  <!-- Floating Bar Mobile untuk Akses Cepat Keranjang -->
+  <div id="mobile-cart-bar" class="lg:hidden fixed bottom-0 inset-x-0 z-20 border-t border-white/10 bg-neutral-900/95 backdrop-blur px-4 py-3 flex items-center justify-between gap-3">
+    <div class="text-xs">
+      <div class="text-neutral-400">Keranjang (<span id="mobile-cart-count">0</span> item)</div>
+      <div id="mobile-cart-total" class="text-sm font-bold text-amber-400">Rp0</div>
+    </div>
+    <a href="#cart-section"
+      class="rounded-full bg-amber-500 px-5 py-2 text-xs font-bold text-neutral-950 hover:bg-amber-400 transition">
+      Lihat Keranjang &amp; Pesan
+    </a>
+  </div>
 
-      <div id="form-error" class="mt-4 hidden rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300"></div>
-
-      <label class="mt-4 block text-sm text-neutral-400">Nama menu
-        <input name="nama" type="text" required maxlength="100"
-          class="mt-1 w-full rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-white outline-none focus:border-amber-400">
-      </label>
-
-      <label class="mt-4 block text-sm text-neutral-400">Kategori
-        <input name="kategori" type="text" required maxlength="50" list="daftar-kategori"
-          class="mt-1 w-full rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-white outline-none focus:border-amber-400">
-        <datalist id="daftar-kategori">
-          <option value="Roti Bakar"></option>
-          <option value="Minuman"></option>
-        </datalist>
-      </label>
-
-      <label class="mt-4 block text-sm text-neutral-400">Harga (Rp)
-        <input name="harga" type="number" required min="0" max="1000000" step="1"
-          class="mt-1 w-full rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-white outline-none focus:border-amber-400">
-      </label>
-
-      <label class="mt-4 flex items-center gap-2 text-sm text-neutral-300">
-        <input name="tersedia" type="checkbox" checked class="h-4 w-4 accent-amber-500">
-        Menu tersedia
-      </label>
-
-      <div class="mt-6 flex justify-end gap-2 text-sm">
-        <button id="btn-batal" type="button"
-          class="rounded-full border border-white/10 px-4 py-2 text-neutral-300 transition hover:border-white/30">Batal</button>
-        <button type="submit"
-          class="rounded-full bg-amber-500 px-5 py-2 font-semibold text-neutral-950 transition hover:bg-amber-400">Simpan</button>
-      </div>
-    </form>
-  </dialog>
-
-  <!-- Notifikasi singkat -->
-  <div id="toast" class="fixed bottom-6 right-6 z-30 hidden rounded-xl border border-white/10 bg-neutral-900 px-4 py-3 text-sm text-white shadow-lg"></div>
+  <!-- Toast Notifikasi -->
+  <div id="toast" class="fixed bottom-20 lg:bottom-6 right-4 z-30 hidden rounded-xl border border-white/10 bg-neutral-900 px-4 py-3 text-sm text-white shadow-lg"></div>
 
   <script>
     (function () {
-      var dialog = document.getElementById('form-dialog');
-      var form = document.getElementById('form-produk');
-      var judul = document.getElementById('form-judul');
-      var errorBox = document.getElementById('form-error');
-      var toast = document.getElementById('toast');
-      var editId = null;
-
-      function tampilToast(pesan, galat) {
-        toast.textContent = pesan;
-        toast.className = 'fixed bottom-6 right-6 z-30 rounded-xl border px-4 py-3 text-sm shadow-lg ' +
-          (galat ? 'border-red-500/40 bg-red-950 text-red-200' : 'border-emerald-500/40 bg-emerald-950 text-emerald-200');
-      }
-
-      function muatUlang() {
-        setTimeout(function () { window.location.reload(); }, 700);
-      }
-
-      function bukaForm(data) {
-        form.reset();
-        errorBox.classList.add('hidden');
-        errorBox.textContent = '';
-        if (data) {
-          editId = data.id;
-          judul.textContent = 'Ubah Menu';
-          form.elements.nama.value = data.nama;
-          form.elements.kategori.value = data.kategori;
-          form.elements.harga.value = data.harga;
-          form.elements.tersedia.checked = data.tersedia === 'true';
-        } else {
-          editId = null;
-          judul.textContent = 'Tambah Menu';
-          form.elements.tersedia.checked = true;
-        }
-        dialog.showModal();
-      }
-
-      document.getElementById('btn-tambah').addEventListener('click', function () { bukaForm(null); });
-      document.getElementById('btn-batal').addEventListener('click', function () { dialog.close(); });
-
-      document.querySelectorAll('[data-aksi="edit"]').forEach(function (tombol) {
-        tombol.addEventListener('click', function () {
-          var kartu = tombol.closest('[data-id]');
-          bukaForm({
-            id: kartu.dataset.id,
-            nama: kartu.dataset.nama,
-            kategori: kartu.dataset.kategori,
-            harga: kartu.dataset.harga,
-            tersedia: kartu.dataset.tersedia
-          });
-        });
-      });
-
-      document.querySelectorAll('[data-aksi="hapus"]').forEach(function (tombol) {
-        tombol.addEventListener('click', async function () {
-          var kartu = tombol.closest('[data-id]');
-          if (!confirm('Hapus menu "' + kartu.dataset.nama + '"?')) return;
-          try {
-            var res = await fetch('/api/produk/' + kartu.dataset.id, { method: 'DELETE' });
-            var data = await res.json();
-            if (!res.ok) { tampilToast(data.pesan || 'Gagal menghapus menu', true); return; }
-            tampilToast(data.pesan);
-            muatUlang();
-          } catch (err) {
-            tampilToast('Tidak dapat terhubung ke server', true);
-          }
-        });
-      });
-
-      form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        var payload = {
-          nama: form.elements.nama.value.trim(),
-          kategori: form.elements.kategori.value.trim(),
-          harga: Number(form.elements.harga.value),
-          tersedia: form.elements.tersedia.checked
-        };
-        var url = editId ? '/api/produk/' + editId : '/api/produk';
-        var method = editId ? 'PUT' : 'POST';
-        try {
-          var res = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          var data = await res.json();
-          if (!res.ok) {
-            errorBox.textContent = (data.errors || [data.pesan]).join(', ');
-            errorBox.classList.remove('hidden');
-            return;
-          }
-          dialog.close();
-          tampilToast(editId ? 'Menu berhasil diperbarui' : 'Menu berhasil ditambahkan');
-          muatUlang();
-        } catch (err) {
-          errorBox.textContent = 'Tidak dapat terhubung ke server';
-          errorBox.classList.remove('hidden');
-        }
-      });
-
-      // Logika Frontend Chatbot AI Assistant
+      var chatBox = document.getElementById('chat-box');
       var chatForm = document.getElementById('chat-form');
       var chatInput = document.getElementById('chat-input');
-      var chatBox = document.getElementById('chat-box');
-      var chatLoading = document.getElementById('chat-loading');
+      var cartItemsEl = document.getElementById('cart-items');
+      var cartSummaryEl = document.getElementById('cart-summary');
+      var cartTotalQtyEl = document.getElementById('cart-total-qty');
+      var cartTotalPriceEl = document.getElementById('cart-total-price');
+      var quickCartCountEl = document.getElementById('quick-cart-count');
+      var mobileCartCountEl = document.getElementById('mobile-cart-count');
+      var mobileCartTotalEl = document.getElementById('mobile-cart-total');
+      var btnClearCart = document.getElementById('btn-clear-cart');
+      var orderForm = document.getElementById('order-form');
+      var orderNamaInput = document.getElementById('order-nama');
+      var orderCatatanInput = document.getElementById('order-catatan');
+      var orderErrorEl = document.getElementById('order-error');
+      var btnPesan = document.getElementById('btn-pesan');
+      var toastEl = document.getElementById('toast');
+
+      var cart = []; // [{ id, nama, kategori, harga, jumlah }]
+      var toastTimer = null;
+
+      function formatRupiah(angka) {
+        return 'Rp' + String(angka || 0).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      }
 
       function escapeHtml(text) {
         var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return text.replace(/[&<>"']/g, function (m) { return map[m]; });
+        return String(text || '').replace(/[&<>"']/g, function (m) { return map[m]; });
       }
 
-      if (chatForm) {
-        chatForm.addEventListener('submit', async function (e) {
-          e.preventDefault();
-          var message = chatInput.value.trim();
-          if (!message) return;
+      function tampilToast(pesan, galat) {
+        toastEl.textContent = pesan;
+        toastEl.className = 'fixed bottom-20 lg:bottom-6 right-4 z-30 rounded-xl border px-4 py-3 text-xs md:text-sm shadow-lg ' +
+          (galat ? 'border-red-500/40 bg-red-950 text-red-200' : 'border-emerald-500/40 bg-emerald-950 text-emerald-200');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toastEl.classList.add('hidden');
+        }, 2800);
+      }
 
-          // Tambahkan pesan user ke kotak chat
-          var userDiv = document.createElement('div');
-          userDiv.className = 'flex justify-end';
-          userDiv.innerHTML = '<div class="max-w-[80%] rounded-xl bg-amber-500/20 border border-amber-500/30 px-4 py-2 text-white text-sm">' + escapeHtml(message) + '</div>';
-          chatBox.appendChild(userDiv);
+      function statusBadgeClass(status) {
+        if (status === 'Siap') return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+        if (status === 'Diproses') return 'bg-sky-500/20 text-sky-300 border-sky-500/40';
+        return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+      }
 
-          chatInput.value = '';
-          chatBox.scrollTop = chatBox.scrollHeight;
-          chatLoading.classList.remove('hidden');
+      function renderCart() {
+        var totalQty = 0;
+        var totalHarga = 0;
+        cart.forEach(function (item) {
+          totalQty += item.jumlah;
+          totalHarga += item.harga * item.jumlah;
+        });
 
-          try {
-            var res = await fetch('/api/chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ message: message })
-            });
-            var data = await res.json();
-            chatLoading.classList.add('hidden');
+        quickCartCountEl.textContent = totalQty;
+        mobileCartCountEl.textContent = totalQty;
+        mobileCartTotalEl.textContent = formatRupiah(totalHarga);
+        cartTotalQtyEl.textContent = totalQty + ' item';
+        cartTotalPriceEl.textContent = formatRupiah(totalHarga);
 
-            var aiDiv = document.createElement('div');
-            aiDiv.className = 'flex justify-start';
+        if (cart.length === 0) {
+          btnClearCart.classList.add('hidden');
+          cartSummaryEl.classList.add('hidden');
+          cartItemsEl.innerHTML =
+            '<div class="rounded-xl border border-dashed border-white/10 p-6 text-center text-xs text-neutral-500">' +
+            'Keranjang masih kosong. Tekan tombol <strong class="text-amber-300">Lihat Menu</strong> di chatbot untuk memilih roti bakar atau minuman.' +
+            '</div>';
+          return;
+        }
 
-            if (!res.ok) {
-              aiDiv.innerHTML = '<div class="max-w-[80%] rounded-xl bg-red-500/20 border border-red-500/30 px-4 py-2 text-red-200 text-sm">Error: ' + escapeHtml(data.error || 'Gagal memproses permintaan.') + '</div>';
+        btnClearCart.classList.remove('hidden');
+        cartSummaryEl.classList.remove('hidden');
+
+        cartItemsEl.innerHTML = cart.map(function (item) {
+          var subtotal = item.harga * item.jumlah;
+          return (
+            '<div class="rounded-xl border border-white/10 bg-neutral-950 p-3 flex items-center justify-between gap-3" data-cart-id="' + item.id + '">' +
+              '<div class="min-w-0">' +
+                '<div class="text-sm font-medium text-white truncate">' + escapeHtml(item.nama) + '</div>' +
+                '<div class="text-xs text-neutral-400">' + formatRupiah(item.harga) + ' &times; ' + item.jumlah + ' = <span class="text-amber-400 font-semibold">' + formatRupiah(subtotal) + '</span></div>' +
+              '</div>' +
+              '<div class="flex items-center gap-1.5 shrink-0">' +
+                '<button type="button" data-cart-dec="' + item.id + '" class="h-7 w-7 rounded-lg border border-white/10 bg-white/5 text-neutral-200 hover:border-amber-400/50">-</button>' +
+                '<span class="w-6 text-center text-xs font-semibold text-white">' + item.jumlah + '</span>' +
+                '<button type="button" data-cart-inc="' + item.id + '" class="h-7 w-7 rounded-lg border border-white/10 bg-white/5 text-neutral-200 hover:border-amber-400/50">+</button>' +
+                '<button type="button" data-cart-del="' + item.id + '" title="Hapus" class="ml-1 h-7 w-7 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/15">&times;</button>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+      }
+
+      function addToCart(produk, qty) {
+        var jumlah = Math.max(1, Math.min(20, Number(qty) || 1));
+        var existing = cart.find(function (c) { return c.id === produk.id; });
+        if (existing) {
+          var nextQty = Math.min(20, existing.jumlah + jumlah);
+          existing.jumlah = nextQty;
+        } else {
+          cart.push({
+            id: produk.id,
+            nama: produk.nama,
+            kategori: produk.kategori,
+            harga: produk.harga,
+            jumlah: jumlah
+          });
+        }
+        renderCart();
+        tampilToast(jumlah + 'x ' + produk.nama + ' masuk ke keranjang');
+      }
+
+      cartItemsEl.addEventListener('click', function (e) {
+        var decId = e.target.getAttribute('data-cart-dec');
+        var incId = e.target.getAttribute('data-cart-inc');
+        var delId = e.target.getAttribute('data-cart-del');
+
+        if (decId) {
+          var item = cart.find(function (c) { return String(c.id) === decId; });
+          if (item) {
+            if (item.jumlah <= 1) {
+              cart = cart.filter(function (c) { return String(c.id) !== decId; });
             } else {
-              aiDiv.innerHTML = '<div class="max-w-[80%] rounded-xl bg-white/5 border border-white/10 px-4 py-2 text-neutral-200 text-sm whitespace-pre-line">' + escapeHtml(data.data.reply) + '</div>';
+              item.jumlah -= 1;
             }
-            chatBox.appendChild(aiDiv);
-          } catch (err) {
-            chatLoading.classList.add('hidden');
-            var errDiv = document.createElement('div');
-            errDiv.className = 'flex justify-start';
-            errDiv.innerHTML = '<div class="max-w-[80%] rounded-xl bg-red-500/20 border border-red-500/30 px-4 py-2 text-red-200 text-sm">Tidak dapat terhubung ke server backend.</div>';
-            chatBox.appendChild(errDiv);
+            renderCart();
           }
-          chatBox.scrollTop = chatBox.scrollHeight;
+        } else if (incId) {
+          var itemInc = cart.find(function (c) { return String(c.id) === incId; });
+          if (itemInc && itemInc.jumlah < 20) {
+            itemInc.jumlah += 1;
+            renderCart();
+          }
+        } else if (delId) {
+          cart = cart.filter(function (c) { return String(c.id) !== delId; });
+          renderCart();
+        }
+      });
+
+      btnClearCart.addEventListener('click', function () {
+        cart = [];
+        renderCart();
+      });
+
+      function appendUserBubble(text) {
+        var wrap = document.createElement('div');
+        wrap.className = 'flex justify-end';
+        wrap.innerHTML =
+          '<div class="max-w-[85%] rounded-2xl rounded-br-sm bg-amber-500/20 border border-amber-500/30 px-4 py-2.5 text-white whitespace-pre-line">' +
+          escapeHtml(text) +
+          '</div>';
+        chatBox.appendChild(wrap);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      function renderButtonsHtml(buttons) {
+        if (!Array.isArray(buttons) || buttons.length === 0) return '';
+        return (
+          '<div class="mt-3 flex flex-wrap gap-1.5">' +
+          buttons.map(function (btn) {
+            return (
+              '<button type="button" data-chat-action="' + escapeHtml(btn.action) + '" data-chat-label="' + escapeHtml(btn.label) + '"' +
+              ' class="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300 hover:bg-amber-500/20 transition">' +
+              escapeHtml(btn.label) +
+              '</button>'
+            );
+          }).join('') +
+          '</div>'
+        );
+      }
+
+      function renderMenuCardsHtml(menu) {
+        if (!Array.isArray(menu) || menu.length === 0) return '';
+        return (
+          '<div class="mt-3 space-y-2">' +
+          menu.map(function (p) {
+            return (
+              '<div class="rounded-xl border border-white/10 bg-neutral-900/90 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5" data-menu-id="' + p.id + '">' +
+                '<div>' +
+                  '<div class="text-xs text-neutral-400">' + escapeHtml(p.kategori) + '</div>' +
+                  '<div class="font-semibold text-white">' + escapeHtml(p.nama) + '</div>' +
+                  '<div class="text-sm font-bold text-amber-400">' + formatRupiah(p.harga) + '</div>' +
+                '</div>' +
+                '<div class="flex items-center gap-2">' +
+                  '<div class="flex items-center rounded-lg border border-white/10 bg-neutral-950">' +
+                    '<button type="button" data-qty-dec="' + p.id + '" class="px-2.5 py-1 text-xs text-neutral-300 hover:text-white">-</button>' +
+                    '<input type="number" min="1" max="20" value="1" data-qty-input="' + p.id + '" class="w-10 bg-transparent text-center text-xs font-semibold text-white outline-none" />' +
+                    '<button type="button" data-qty-inc="' + p.id + '" class="px-2.5 py-1 text-xs text-neutral-300 hover:text-white">+</button>' +
+                  '</div>' +
+                  '<button type="button" data-add-menu="' + p.id + '"' +
+                    ' data-nama="' + escapeHtml(p.nama) + '"' +
+                    ' data-kategori="' + escapeHtml(p.kategori) + '"' +
+                    ' data-harga="' + p.harga + '"' +
+                    ' class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-neutral-950 hover:bg-amber-400 transition shrink-0">' +
+                    '+ Keranjang' +
+                  '</button>' +
+                '</div>' +
+              '</div>'
+            );
+          }).join('') +
+          '</div>'
+        );
+      }
+
+      function renderOrderCardHtml(order) {
+        if (!order) return '';
+        var itemsHtml = (order.items || []).map(function (it) {
+          return '<div class="flex justify-between text-xs text-neutral-300"><span>' + escapeHtml(it.nama_produk) + ' &times;' + it.jumlah + '</span><span>' + formatRupiah(it.subtotal) + '</span></div>';
+        }).join('');
+
+        return (
+          '<div class="mt-2.5 rounded-xl border border-white/10 bg-neutral-900/90 p-3.5 space-y-2">' +
+            '<div class="flex items-center justify-between gap-2">' +
+              '<span class="font-mono text-sm font-bold text-amber-300">' + escapeHtml(order.nomor_pesanan) + '</span>' +
+              '<span class="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ' + statusBadgeClass(order.status) + '">' + escapeHtml(order.status) + '</span>' +
+            '</div>' +
+            '<div class="text-xs text-neutral-400">Pemesan: <span class="text-white">' + escapeHtml(order.nama_pelanggan) + '</span> &middot; ' + escapeHtml(order.jenis_pesanan) + '</div>' +
+            '<div class="border-t border-white/10 pt-2 space-y-1">' + itemsHtml + '</div>' +
+            (order.catatan ? '<div class="text-xs text-neutral-400">Catatan: ' + escapeHtml(order.catatan) + '</div>' : '') +
+            '<div class="border-t border-white/10 pt-2 flex justify-between text-xs font-bold text-white">' +
+              '<span>Total</span><span class="text-amber-400">' + formatRupiah(order.total_harga) + '</span>' +
+            '</div>' +
+          '</div>'
+        );
+      }
+
+      function appendBotBubble(payload) {
+        var wrap = document.createElement('div');
+        wrap.className = 'flex justify-start';
+
+        var extraHtml = '';
+        if (payload.type === 'menu' && Array.isArray(payload.menu) && payload.menu.length > 0) {
+          extraHtml = renderMenuCardsHtml(payload.menu);
+        } else if (payload.type === 'order_status' && payload.order) {
+          extraHtml = renderOrderCardHtml(payload.order);
+        }
+
+        var textHtml = payload.type === 'menu' && Array.isArray(payload.menu) && payload.menu.length > 0
+          ? '<div class="text-neutral-200">Berikut daftar menu yang tersedia. Pilih jumlah lalu klik <strong>+ Keranjang</strong>:</div>'
+          : '<div class="whitespace-pre-line text-neutral-200">' + escapeHtml(payload.reply) + '</div>';
+
+        wrap.innerHTML =
+          '<div class="max-w-[92%] sm:max-w-[85%] rounded-2xl rounded-bl-sm bg-white/5 border border-white/10 px-4 py-3">' +
+            textHtml +
+            extraHtml +
+            renderButtonsHtml(payload.buttons) +
+          '</div>';
+
+        chatBox.appendChild(wrap);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      function showWelcomeMessage() {
+        chatBox.innerHTML = '';
+        appendBotBubble({
+          type: 'welcome',
+          reply: 'Halo! Selamat datang di ChatBot Bara Toast & Chill.\nSilakan pilih tombol menu di bawah untuk melihat daftar menu, mengisi keranjang, mengecek status pesanan, atau melihat info toko.',
+          buttons: [
+            { label: 'Lihat Menu', action: 'LIHAT_MENU' },
+            { label: 'Keranjang', action: 'KERANJANG' },
+            { label: 'Cek Status Pesanan', action: 'CEK_STATUS_PROMPT' },
+            { label: 'Info Toko', action: 'INFO_TOKO' }
+          ]
         });
       }
 
-      // Indikator status server dari /api/status
+      async function sendChatRequest(body, userLabel) {
+        if (userLabel) {
+          appendUserBubble(userLabel);
+        }
+
+        try {
+          var res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          var json = await res.json();
+
+          if (!res.ok || !json.success) {
+            appendBotBubble({
+              type: 'error',
+              reply: json.error || json.pesan || 'Gagal memproses pesan.',
+              buttons: [{ label: 'Menu Utama', action: 'MENU_UTAMA' }]
+            });
+            return;
+          }
+
+          var data = json.data;
+          appendBotBubble(data);
+
+          if (data.type === 'status_prompt') {
+            chatInput.placeholder = 'Ketik nomor pesanan (contoh: BTC-0001)...';
+            chatInput.focus();
+          } else if (data.type === 'cart') {
+            if (cart.length > 0) {
+              document.getElementById('cart-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          }
+        } catch (err) {
+          appendBotBubble({
+            type: 'error',
+            reply: 'Tidak dapat terhubung ke server. Pastikan server berjalan.',
+            buttons: [{ label: 'Menu Utama', action: 'MENU_UTAMA' }]
+          });
+        }
+      }
+
+      // Klik tombol di dalam chatBox (menu action, tambah ke keranjang, stepper qty)
+      chatBox.addEventListener('click', function (e) {
+        var actionBtn = e.target.closest('[data-chat-action]');
+        if (actionBtn) {
+          var action = actionBtn.getAttribute('data-chat-action');
+          var label = actionBtn.getAttribute('data-chat-label') || actionBtn.textContent.trim();
+          var nomor = actionBtn.getAttribute('data-order-nomor');
+          if (action === 'CEK_STATUS' && nomor) {
+            sendChatRequest({ action: 'CEK_STATUS', message: nomor }, 'Cek status ' + nomor);
+          } else {
+            sendChatRequest({ action: action }, label);
+          }
+          return;
+        }
+
+        var decBtn = e.target.closest('[data-qty-dec]');
+        if (decBtn) {
+          var idDec = decBtn.getAttribute('data-qty-dec');
+          var inputDec = decBtn.parentElement.querySelector('[data-qty-input="' + idDec + '"]');
+          if (inputDec) {
+            var val = Math.max(1, (parseInt(inputDec.value, 10) || 1) - 1);
+            inputDec.value = val;
+          }
+          return;
+        }
+
+        var incBtn = e.target.closest('[data-qty-inc]');
+        if (incBtn) {
+          var idInc = incBtn.getAttribute('data-qty-inc');
+          var inputInc = incBtn.parentElement.querySelector('[data-qty-input="' + idInc + '"]');
+          if (inputInc) {
+            var valInc = Math.min(20, (parseInt(inputInc.value, 10) || 1) + 1);
+            inputInc.value = valInc;
+          }
+          return;
+        }
+
+        var addBtn = e.target.closest('[data-add-menu]');
+        if (addBtn) {
+          var id = Number(addBtn.getAttribute('data-add-menu'));
+          var card = addBtn.closest('[data-menu-id]');
+          var qtyInput = card ? card.querySelector('[data-qty-input="' + id + '"]') : null;
+          var qty = qtyInput ? Math.max(1, Math.min(20, parseInt(qtyInput.value, 10) || 1)) : 1;
+          addToCart({
+            id: id,
+            nama: addBtn.getAttribute('data-nama'),
+            kategori: addBtn.getAttribute('data-kategori'),
+            harga: Number(addBtn.getAttribute('data-harga'))
+          }, qty);
+        }
+      });
+
+      // Tombol cepat di bawah chatBox
+      document.querySelectorAll('.space-y-2\\.5 [data-chat-action]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var action = btn.getAttribute('data-chat-action');
+          var label = btn.textContent.trim();
+          sendChatRequest({ action: action }, label);
+        });
+      });
+
+      document.getElementById('btn-reset-chat').addEventListener('click', function () {
+        chatInput.placeholder = 'Ketik pesan, misal: menu, jam buka, atau BTC-0001...';
+        showWelcomeMessage();
+      });
+
+      chatForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var message = chatInput.value.trim();
+        if (!message) return;
+        chatInput.value = '';
+        sendChatRequest({ message: message }, message);
+      });
+
+      // Submit Pesanan (US-03)
+      orderForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        orderErrorEl.classList.add('hidden');
+        orderErrorEl.textContent = '';
+
+        if (cart.length === 0) {
+          var msgEmpty = 'Keranjang masih kosong. Pilih menu terlebih dahulu sebelum memesan.';
+          orderErrorEl.textContent = msgEmpty;
+          orderErrorEl.classList.remove('hidden');
+          appendBotBubble({
+            type: 'error',
+            reply: msgEmpty,
+            buttons: [{ label: 'Lihat Menu', action: 'LIHAT_MENU' }]
+          });
+          return;
+        }
+
+        var nama = orderNamaInput.value.trim();
+        if (!nama) {
+          var msgNama = 'Nama pemesan wajib diisi. Silakan isi nama Anda terlebih dahulu.';
+          orderErrorEl.textContent = msgNama;
+          orderErrorEl.classList.remove('hidden');
+          orderNamaInput.focus();
+          appendBotBubble({
+            type: 'error',
+            reply: msgNama
+          });
+          return;
+        }
+
+        var jenisEl = orderForm.querySelector('input[name="jenis_pesanan"]:checked');
+        var jenis = jenisEl ? jenisEl.value : 'Makan di tempat';
+        var catatan = orderCatatanInput.value.trim();
+
+        btnPesan.disabled = true;
+        btnPesan.textContent = 'Menyimpan pesanan...';
+
+        try {
+          var res = await fetch('/api/pesanan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              nama_pelanggan: nama,
+              jenis_pesanan: jenis,
+              catatan: catatan,
+              items: cart.map(function (c) {
+                return { produkId: c.id, jumlah: c.jumlah };
+              })
+            })
+          });
+          var json = await res.json();
+
+          if (!res.ok) {
+            var errMsg = (json.errors && json.errors[0]) || json.pesan || 'Gagal menyimpan pesanan.';
+            orderErrorEl.textContent = errMsg;
+            orderErrorEl.classList.remove('hidden');
+            appendBotBubble({ type: 'error', reply: errMsg });
+            return;
+          }
+
+          var order = json.data;
+          cart = [];
+          renderCart();
+          orderForm.reset();
+
+          // Tampilkan nomor pesanan unik & ringkasan di chatbot (US-03)
+          var wrap = document.createElement('div');
+          wrap.className = 'flex justify-start';
+          wrap.innerHTML =
+            '<div class="max-w-[92%] sm:max-w-[85%] rounded-2xl rounded-bl-sm bg-emerald-500/10 border border-emerald-500/30 px-4 py-3">' +
+              '<div class="text-emerald-300 font-semibold">Pesanan berhasil dicatat!</div>' +
+              '<div class="mt-1 text-xs text-neutral-300">Simpan nomor pesanan Anda untuk mengecek progres di dapur. Pembayaran dilakukan langsung di kasir toko.</div>' +
+              renderOrderCardHtml(order) +
+              '<div class="mt-3 flex flex-wrap gap-1.5">' +
+                '<button type="button" data-chat-action="CEK_STATUS" data-order-nomor="' + escapeHtml(order.nomor_pesanan) + '" class="rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300 hover:bg-emerald-500/25 transition">Cek Status ' + escapeHtml(order.nomor_pesanan) + '</button>' +
+                '<button type="button" data-chat-action="LIHAT_MENU" data-chat-label="Lihat Menu" class="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300 hover:bg-amber-500/20 transition">Pesan Lagi</button>' +
+              '</div>' +
+            '</div>';
+          chatBox.appendChild(wrap);
+          chatBox.scrollTop = chatBox.scrollHeight;
+
+          tampilToast('Pesanan ' + order.nomor_pesanan + ' berhasil dibuat!');
+        } catch (err) {
+          orderErrorEl.textContent = 'Tidak dapat terhubung ke server.';
+          orderErrorEl.classList.remove('hidden');
+        } finally {
+          btnPesan.disabled = false;
+          btnPesan.textContent = 'Pesan Sekarang';
+        }
+      });
+
+      // Status Server
       (async function () {
         var dot = document.getElementById('status-dot');
         var text = document.getElementById('status-text');
@@ -339,12 +673,15 @@
           var res = await fetch('/api/status');
           var data = await res.json();
           dot.className = 'h-2 w-2 rounded-full bg-emerald-400';
-          text.textContent = 'Server online \u00b7 PostgreSQL ' + data.database;
+          text.textContent = 'Server online \u00b7 PostgreSQL ' + (data.database || 'terhubung');
         } catch (err) {
           dot.className = 'h-2 w-2 rounded-full bg-red-500';
           text.textContent = 'Server tidak terjangkau';
         }
       })();
+
+      showWelcomeMessage();
+      renderCart();
     })();
   </script>
 

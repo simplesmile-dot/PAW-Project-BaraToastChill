@@ -1,4 +1,4 @@
-const { getChatResponse } = require('../config/gemini');
+const geminiConfig = require('../config/gemini');
 const Produk = require('../models/Produk');
 
 async function processUserMessage(userMessage) {
@@ -6,7 +6,7 @@ async function processUserMessage(userMessage) {
     const listProduk = await Produk.findAll();
     const infoProduk = listProduk.map(p => `- ${p.nama}: Rp ${p.harga} (${p.tersedia ? 'Tersedia' : 'Habis'})`).join('\n');
 
-    return await getChatResponse(userMessage, infoProduk);
+    return await geminiConfig.getChatResponse(userMessage, infoProduk);
 }
 
 module.exports = { processUserMessage };

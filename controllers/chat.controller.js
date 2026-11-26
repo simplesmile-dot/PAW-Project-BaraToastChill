@@ -1,14 +1,14 @@
-const { processUserMessage } = require('../services/gemini.service');
+const chatbotService = require('../services/chatbot.service');
 const asyncHandler = require('../utils/asyncHandler');
 
 const handleChat = asyncHandler(async (req, res) => {
-    const { message } = req.body;
-    const reply = await processUserMessage(message);
+  const { message, action } = req.body || {};
+  const result = await chatbotService.processChat({ message, action });
 
-    res.status(200).json({
-        success: true,
-        data: { reply }
-    });
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
 });
 
 module.exports = { handleChat };

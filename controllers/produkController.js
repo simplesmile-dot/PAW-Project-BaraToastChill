@@ -11,8 +11,11 @@ const tidakDitemukan = (res, id) =>
 const dataTidakValid = (res, errors) =>
   res.status(400).json({ pesan: 'Data tidak valid', errors });
 
-// GET /api/produk -> semua produk (array JSON)
+// GET /api/produk -> semua produk (mendukung ?tersedia=true)
 const getAllProduk = asyncHandler(async (req, res) => {
+  if (req.query.tersedia === 'true') {
+    return res.json(await produkModel.getAvailable());
+  }
   res.json(await produkModel.getAll());
 });
 
@@ -50,6 +53,27 @@ const updateProduk = asyncHandler(async (req, res) => {
   res.json(await produkModel.update(id, data));
 });
 
+// PATCH /api/produk/:id/status -> aktifkan / nonaktifkan ketersediaan menu
+const toggleStatusProduk = asyncHandler(async (req, res) => {
+  const id = parseId(req.params.id);
+  if (!id) return idTidakValid(res);
+
+  const lama = await produkModel.getById(id);
+  if (!lama) return tidakDitemukan(res, id);
+
+  const tersediaBaru =
+    typeof req.body?.tersedia === 'boolean' ? req.body.tersedia : !lama.tersedia;
+
+  const updated = await produkModel.update(id, {
+    nama: lama.nama,
+    kategori: lama.kategori,
+    harga: lama.harga,
+    tersedia: tersediaBaru,
+  });
+
+  res.json(updated);
+});
+
 // DELETE /api/produk/:id -> hapus produk
 const deleteProduk = asyncHandler(async (req, res) => {
   const id = parseId(req.params.id);
@@ -62,4 +86,11 @@ const deleteProduk = asyncHandler(async (req, res) => {
   res.json({ pesan: 'Produk berhasil dihapus', data: lama });
 });
 
-module.exports = { getAllProduk, getProdukById, createProduk, updateProduk, deleteProduk };
+module.exports = {
+  getAllProduk,
+  getProdukById,
+  createProduk,
+  updateProduk,
+  toggleStatusProduk,
+  deleteProduk,
+};

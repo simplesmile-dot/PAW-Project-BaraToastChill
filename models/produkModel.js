@@ -20,6 +20,15 @@ const getAll = async () => {
   return rows.map(serialize);
 };
 
+// READ: hanya produk yang tersedia (untuk chatbot dan halaman konsumen)
+const getAvailable = async () => {
+  const rows = await Produk.findAll({
+    where: { tersedia: true },
+    order: [['id', 'ASC']],
+  });
+  return rows.map(serialize);
+};
+
 // READ: satu produk berdasarkan ID (null jika tidak ada)
 const getById = async (id) => serialize(await Produk.findByPk(id));
 
@@ -41,4 +50,4 @@ const remove = async (id) => (await Produk.destroy({ where: { id } })) > 0;
 // Jumlah produk (dipakai oleh /api/status)
 const count = async () => Produk.count();
 
-module.exports = { getAll, getById, create, update, remove, count };
+module.exports = { getAll, getAvailable, getById, create, update, remove, count };
